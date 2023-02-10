@@ -16,6 +16,8 @@
     "prettier": "prettier --write **/*.ts"
   },
   "dependencies": {
+    "@avvy/client": "^3.3.2",
+    "ethers": "^5.7.2",
     "itty-router": "^3.0.11"
   }
 }
