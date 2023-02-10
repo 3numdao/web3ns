@@ -1,6 +1,6 @@
 interface KVItem {
-    address: string;
-    phone: string;
+  address: string;
+  phone: string;
 }
 
 export default KVItem;
