@@ -1,0 +1,46 @@
+import KVItem from '../models/kv-item';
+import LookupData from '../models/lookup-data';
+
+abstract class LookupBase {
+  public abstract doLookup(name: string): Promise<LookupData>;
+
+  public async execute(
+    name: string,
+    namespace: KVNamespace
+  ): Promise<LookupData> {
+    const kvItem = await this.getName(name, namespace);
+
+    if (kvItem) {
+      return { name, ...kvItem };
+    }
+
+    return this.doLookup(name);
+  }
+
+  public async saveName(
+    lookup: LookupData,
+    namespace: KVNamespace,
+    ttlMinutes = 5
+  ): Promise<void> {
+    return namespace.put(
+      lookup.name,
+      JSON.stringify({ address: lookup.address, phone: lookup.phone }),
+      { expirationTtl: ttlMinutes * 60 }
+    );
+  }
+
+  // TODO: Use cacheTtl here?
+  public async getName(
+    name: string,
+    namespace: KVNamespace /*, cacheTtlMinutes = 5*/
+  ): Promise<KVItem | null> {
+    const kvItem = (await namespace.get(name, {
+      type: 'json',
+      /*cacheTtl: cacheTtlMinutes * 60,*/
+    })) as KVItem;
+
+    return kvItem;
+  }
+}
+
+export default LookupBase;
