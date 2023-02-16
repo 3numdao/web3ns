@@ -14,7 +14,10 @@ abstract class LookupBase {
       return { name, ...kvItem };
     }
 
-    return this.doLookup(name);
+    const lookupData = await this.doLookup(name);
+    await this.saveName(lookupData, namespace);
+
+    return lookupData;
   }
 
   public async saveName(
