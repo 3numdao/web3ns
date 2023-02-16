@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import KVItem from '../../models/kv-item';
 import LookupData from '../../models/lookup-data';
 import AvaxLookup from '../avax/avax-lookup';
@@ -192,7 +192,7 @@ describe('doLookup should', () => {
     });
   });
 
-  test('call doLookup should pass along expected parameters', async () => {
+  test('return valid LookupData', async () => {
     mockAvvy(avvyResolverHappyPath);
     const name = 'qwerty.avax';
     const expected = { name, address: defaultAddress, phone: defaultPhone };
@@ -234,5 +234,3 @@ describe('doLookup should', () => {
       });
   });
 });
-
-describe('execute should', () => {});
