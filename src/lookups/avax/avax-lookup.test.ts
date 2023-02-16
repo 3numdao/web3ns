@@ -44,7 +44,7 @@ const createKvItemFromLookupData = (lookupData: LookupData) => {
 //#endregion
 
 //#region Mocks
-const mockNamespace = (getResponse = createKvItem()) => {
+const mockNamespace = (getResponse: KVItem | null = createKvItem()) => {
   const namespace = {
     get: vi.fn().mockResolvedValue(getResponse),
     put: vi.fn().mockResolvedValue(undefined),
@@ -53,20 +53,29 @@ const mockNamespace = (getResponse = createKvItem()) => {
   return namespace;
 };
 
+/**
+ *
+ * @param resolverFunction The function to use for resolve: (type: string): string | null => {}, useful for mocking tests with error or expected returns.
+ * @returns A reference to the function used for avvy.name, to validate it was/wasn't called.
+ */
 function mockAvvy(resolverFunction: any) {
+  const mockedName = vi.fn().mockImplementation((name: string) => {
+    switch (name) {
+      case 'not-found.avax':
+        return Promise.resolve(null);
+      default:
+        return Promise.resolve({
+          name,
+          resolve: resolverFunction,
+        });
+    }
+  });
+
   avvy.mockImplementation(() => ({
-    name: vi.fn().mockImplementation((name: string) => {
-      switch (name) {
-        case 'not-found.avax':
-          return Promise.resolve(null);
-        default:
-          return Promise.resolve({
-            name,
-            resolve: resolverFunction,
-          });
-      }
-    }),
+    name: mockedName,
   }));
+
+  return mockedName;
 }
 
 const mockAvvyResolverHappyPath = vi.fn().mockImplementation((type: number) => {
@@ -238,15 +247,16 @@ describe('doLookup should', () => {
 
 describe('execute should', () => {
   let avaxLookup: AvaxLookup;
+  let mockedNameFn: any;
   const testPhone = 'test-phone-not-default';
   const testAddress = 'test-address-not-default';
 
   beforeEach(() => {
     avaxLookup = new AvaxLookup();
-    mockAvvy(mockAvvyResolverHappyPath);
+    mockedNameFn = mockAvvy(mockAvvyResolverHappyPath);
   });
 
-  test('get name from getName', async () => {
+  test('get lookup from getName', async () => {
     const namespace = {
       get: vi
         .fn()
@@ -255,12 +265,33 @@ describe('execute should', () => {
     } as any;
 
     const name = 'qwerty.avax';
-    const expectedData = { name, address: testAddress, phone: testPhone };
+    const expectedData = createLookupData(name, testPhone, testAddress);
 
     const lookupData = await avaxLookup.execute(name, namespace);
 
     expect(lookupData).toEqual(expectedData);
+    expect(mockedNameFn).not.toBeCalled();
   });
 
-  test('', () => {});
+  test('get lookup from doLookup when name empty', async () => {
+    const expectedKVItem = { address: 'test-address', phone: 'test-phone' };
+    const namespace = mockNamespace(null) as any;
+
+    const name = 'qwerty.avax';
+    const expectedData = createLookupData(name);
+
+    const lookupData = await avaxLookup.execute(name, namespace);
+
+    expect(lookupData).toEqual(expectedData);
+
+    expect(mockedNameFn).toHaveBeenCalledTimes(1);
+    expect(namespace.get).toHaveBeenCalledWith(name, {
+      type: 'json',
+    });
+    expect(namespace.put).toHaveBeenCalledWith(
+      name,
+      JSON.stringify(expectedKVItem),
+      { expirationTtl: 5 * 60 }
+    );
+  });
 });
