@@ -1,3 +1,6 @@
 name = "web3ns"
 main = "src/index.ts"
 compatibility_date = "2023-02-07"
+kv_namespaces = [
+    { binding = "NAMES", id = "6c136c092ccf46f984a61b8206f0d7f6", preview_id = "07ac2fea1a81479c94d7d19afc7121f1" }
+]
