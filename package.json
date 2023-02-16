@@ -12,7 +12,7 @@
   "scripts": {
     "start": "wrangler dev",
     "deploy": "wrangler publish",
-    "test": "vitest",
+    "test": "vitest src/",
     "prettier": "prettier --write **/*.ts"
   },
   "dependencies": {
