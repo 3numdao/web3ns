@@ -12,7 +12,8 @@
   "scripts": {
     "start": "wrangler dev",
     "deploy": "wrangler publish",
-    "test": "vitest src/",
+    "test": "vitest src",
+    "test:e2e": "vitest tests/e2e",
     "prettier": "prettier --write **/*.ts"
   },
   "dependencies": {

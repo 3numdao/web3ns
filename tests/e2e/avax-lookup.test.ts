@@ -16,10 +16,14 @@ describe('Worker', () => {
   });
 
   it('should return Hello World', async () => {
-    const resp = await worker.fetch();
+    const resp = await worker.fetch('/api/v1/lookup/3numdao.avax');
     if (resp) {
-      const text = await resp.text();
-      expect(text).toMatchInlineSnapshot(`"Hello World!"`);
+      const response = await resp.json();
+      expect(response).toEqual({
+        address: '0xa18a6AAa73f03F43E8E29Fde02010735b5852b4c',
+        name: '3numdao.avax',
+        phone: '14254416889',
+      });
     }
   });
 });
