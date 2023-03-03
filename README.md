@@ -1,6 +1,6 @@
 # web3ns
 
-Look Web3 up identifiers
+Look up Web3 identifiers
 
 # Dev Setup
 
@@ -15,7 +15,7 @@ wrangler kv:namespace create NAMES --preview # Creates a preview instance of the
 
 # Ether secret token
 
-PLACEHOLDER
+`EtherLookup` will attept to read `ether_token` directly from environment variables. This token is required for ENS lookups.
 
 # Creating a new Lookup.
 
