@@ -4,6 +4,7 @@ import LookupData from '../../models/lookup-data';
 import EtherLookup from './ether-lookup';
 import { providers } from 'ethers';
 import NotFoundError from '../../models/not-found-error';
+import RequiredEnvMissing from '../../models/required-env-missing';
 
 vi.mock('ethers', async () => {
   return {
@@ -15,11 +16,17 @@ vi.mock('ethers', async () => {
 
 const defaultPhone = 'test-phone';
 const defaultAddress = 'test-address';
+const defaultToken = 'test-token';
 
 const expectedPhoneNotFoundCode = 'PhoneNotFound';
 const expectedPhoneNotFoundDescription = 'ENS name did not have a phone number';
 const expectedEtherNotFoundDescription = 'ENS name was not found';
 const expectedEtherNotFoundCode = 'ENSNotFound';
+const expectedEtherTokenErrorMessage = 'ether_token is a required env var';
+const expectedRequiredEtherToken =
+  'Add ether_token as an env var. ' +
+  'For local: add ether_token=<your-token> to .dev.var. ' +
+  'For hosted worker environment add ether_token to the worker secrets: npx wrangler secret put ether_token';
 
 // #region Helper functions
 const createKvItem = (
@@ -69,7 +76,7 @@ describe('getName should', () => {
 
   beforeEach(() => {
     namespace = mockNamespace() as any;
-    etherLookup = new EtherLookup();
+    etherLookup = new EtherLookup(defaultToken);
   });
 
   test('call get on namespace with given params', async () => {
@@ -85,7 +92,7 @@ describe('saveName should', () => {
 
   beforeEach(() => {
     namespace = mockNamespace() as any;
-    etherLookup = new EtherLookup();
+    etherLookup = new EtherLookup(defaultToken);
   });
 
   test('call put on the given namespace with params', async () => {
@@ -109,7 +116,7 @@ describe('doLookup should', () => {
   let etherLookup: EtherLookup;
 
   beforeEach(() => {
-    etherLookup = new EtherLookup();
+    etherLookup = new EtherLookup(defaultToken);
   });
 
   test('return valid LookupData', async () => {
@@ -125,6 +132,23 @@ describe('doLookup should', () => {
     const lookupData = await etherLookup.doLookup(name);
 
     expect(lookupData).toEqual(expected);
+  });
+
+  test('throw error when ether token was not given', async () => {
+    mockEthers(vi.fn());
+    etherLookup = new EtherLookup('');
+    const name = 'qwerty.eth';
+
+    return etherLookup
+      .doLookup(name)
+      .then(() => expect.fail)
+      .catch((e: RequiredEnvMissing) => {
+        expect(e).toBeInstanceOf(RequiredEnvMissing);
+        expect(e.code).toBe(500);
+        expect(e.key).toBe('ether_token');
+        expect(e.suggestion).toBe(expectedRequiredEtherToken);
+        expect(e.message).toBe(expectedEtherTokenErrorMessage);
+      });
   });
 
   test('throw error when name not found', async () => {
