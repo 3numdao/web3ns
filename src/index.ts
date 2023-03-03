@@ -12,7 +12,7 @@ import { Router } from 'itty-router';
 import AvaxLookup from './lookups/avax/avax-lookup';
 import NotFoundError from './models/not-found-error';
 
-const avaxLookup = new AvaxLookup();
+// const avaxLookup = new AvaxLookup();
 
 export interface Env {
   // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
@@ -25,6 +25,26 @@ export interface Env {
   // MY_BUCKET: R2Bucket;
 }
 
+const handleLookup = async (name: string, env: Env) => {
+  switch (name.split('.').pop()) {
+    case 'eth': {
+      return null;
+    }
+    case 'avvy': {
+      const avaxLookup = new AvaxLookup();
+      const result = await avaxLookup.execute(name, env.NAMES);
+      return JSON.stringify(result);
+    }
+    default: {
+      throw new NotFoundError(
+        'Could not match extension to a supported type',
+        name,
+        null
+      );
+    }
+  }
+};
+
 export default {
   async fetch(
     request: Request,
@@ -33,10 +53,9 @@ export default {
   ): Promise<Response> {
     const router = Router();
 
-    router.get('/api/v1/lookup/:name', async ({ params }) => {
-      const result = await avaxLookup.execute(params.name, env.NAMES);
-      return JSON.stringify(result);
-    });
+    router.get('/api/v1/lookup/:name', async ({ params }) =>
+      handleLookup(params.name, env)
+    );
 
     return (
       router
