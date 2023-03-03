@@ -1,6 +1,6 @@
 # web3ns
 
-Look Web3 up identifiers
+Look up Web3 identifiers
 
 # Dev Setup
 
@@ -15,7 +15,8 @@ wrangler kv:namespace create NAMES --preview # Creates a preview instance of the
 
 # Ether secret token
 
-PLACEHOLDER
+`EtherLookup` will require `ether_token` to be set as a secret. An error is thrown when this value is used but no token is set.
+To create the ether_token secret use `npx wrangler secret put ether_token`, to set the token locally for development add `ether_token=<your-token>` to `.dev.vars` file.
 
 # Creating a new Lookup.
 
@@ -25,4 +26,4 @@ Lookup Code structured so far follows the pattern of: `execute -> getName -> doL
 
 # Running Locally
 
-To run the application locally use `npx wrangler dev`. This runs the application in dev mode and will use the preview namespace referenced above.
+To run the application locally use `npx wrangler dev`. This runs the application in dev mode and will use the preview namespace and `.dev.vars` mentioned above.
