@@ -66,17 +66,17 @@ export default {
         .handle(request)
         .then((result) => new Response(result))
         // TODO: This is wrong. Copy logic from ethercache
-        .catch(
-          (error) =>
-            new Response(
-              error.toInformativeObject
-                ? error.toInformativeObject()
-                : error.getMessage(),
-              {
-                status: error.status || 500,
-              }
-            )
-        )
+        .catch((error) => {
+          console.log(error.message);
+          return new Response(
+            error.toInformativeObject
+              ? error.toInformativeObject()
+              : error.message,
+            {
+              status: error.status || 500,
+            }
+          );
+        })
     );
   },
 };
