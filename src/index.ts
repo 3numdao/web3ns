@@ -30,7 +30,7 @@ const handleLookup = async (name: string, env: Env) => {
     case 'eth': {
       return null;
     }
-    case 'avvy': {
+    case 'avax': {
       const avaxLookup = new AvaxLookup();
       const result = await avaxLookup.execute(name, env.NAMES);
       return JSON.stringify(result);
