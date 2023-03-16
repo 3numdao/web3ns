@@ -10,6 +10,7 @@
 
 import { Router } from 'itty-router';
 import AvaxLookup from './lookups/avax/avax-lookup';
+import EtherLookup from './lookups/ether/ether-lookup';
 import NotFoundError from './models/not-found-error';
 
 // const avaxLookup = new AvaxLookup();
@@ -29,7 +30,9 @@ export interface Env {
 const handleLookup = async (name: string, env: Env) => {
   switch (name.split('.').pop()) {
     case 'eth': {
-      return null;
+      const etherLookup = new EtherLookup(env.ether_token);
+      const result = await etherLookup.execute(name, env.NAMES);
+      return JSON.stringify(result);
     }
     case 'avax': {
       const avaxLookup = new AvaxLookup();
