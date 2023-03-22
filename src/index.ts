@@ -12,6 +12,7 @@ import { Router } from 'itty-router';
 import AvaxLookup from './lookups/avax/avax-lookup';
 import NotFoundError from './models/not-found-error';
 
+const supportedExtensions: string[] = ['.eth', '.avax'];
 const avaxLookup = new AvaxLookup();
 
 export interface Env {
@@ -34,26 +35,29 @@ export default {
   ): Promise<Response> {
     const router = Router();
 
-    router.get('/api/v1/lookup/:name', async ({ params }) => {
-      const result = await avaxLookup.execute(params.name, env.NAMES);
-      return JSON.stringify(result);
-    });
+    router
+      .get('/api/v1/extensions', () => {
+        return supportedExtensions;
+      })
+      .get('/api/v1/lookup/:name', async ({ params }) => {
+        const result = await avaxLookup.execute(params.name, env.NAMES);
+        return result;
+      });
 
     return (
       router
         .handle(request)
-        .then((result) => new Response(result))
+        .then((result) => Response.json(result))
         // TODO: This is wrong. Copy logic from ethercache
-        .catch(
-          (error) =>
-            new Response(
-              error.toInformativeObject
-                ? error.toInformativeObject()
-                : error.getMessage(),
-              {
-                status: error.status || 500,
-              }
-            )
+        .catch((error) =>
+          Response.json(
+            error.toInformativeObject
+              ? error.toInformativeObject()
+              : error.getMessage(),
+            {
+              status: error.status || 500,
+            }
+          )
         )
     );
   },
