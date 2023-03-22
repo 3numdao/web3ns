@@ -13,7 +13,7 @@ import AvaxLookup from './lookups/avax/avax-lookup';
 import EtherLookup from './lookups/ether/ether-lookup';
 import NotFoundError from './models/not-found-error';
 
-// const avaxLookup = new AvaxLookup();
+const supportedExtensions: string[] = ['.eth', '.avax'];
 
 export interface Env {
   // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
@@ -32,12 +32,12 @@ const handleLookup = async (name: string, env: Env) => {
     case 'eth': {
       const etherLookup = new EtherLookup(env.ether_token);
       const result = await etherLookup.execute(name, env.NAMES);
-      return JSON.stringify(result);
+      return result;
     }
     case 'avax': {
       const avaxLookup = new AvaxLookup();
       const result = await avaxLookup.execute(name, env.NAMES);
-      return JSON.stringify(result);
+      return result;
     }
     default: {
       throw new NotFoundError(
@@ -57,26 +57,29 @@ export default {
   ): Promise<Response> {
     const router = Router();
 
-    router.get('/api/v1/lookup/:name', async ({ params }) =>
-      handleLookup(params.name, env)
-    );
+    router
+      .get('/api/v1/extensions', () => {
+        return supportedExtensions;
+      })
+      .get('/api/v1/lookup/:name', async ({ params }) =>
+        handleLookup(params.name, env)
+      );
 
     return (
       router
         .handle(request)
-        .then((result) => new Response(result))
+        .then((result) => Response.json(result))
         // TODO: This is wrong. Copy logic from ethercache
-        .catch((error) => {
-          console.log(error.message);
-          return new Response(
+        .catch((error) =>
+          Response.json(
             error.toInformativeObject
               ? error.toInformativeObject()
-              : error.message,
+              : error.getMessage(),
             {
               status: error.status || 500,
             }
-          );
-        })
+          )
+        )
     );
   },
 };
