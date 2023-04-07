@@ -9,11 +9,11 @@ const ETH_API_SERVER = 'https://eth-mainnet.alchemyapi.io/v2/';
 const PHONE_TEXT = 'phone';
 
 const ERRORS = Object.freeze({
-  REQUIRED_ETHER_TOKEN_ERROR: 'ether_token is a required env var',
-  REQUIRED_ETHER_TOKEN_SUGGESTION:
-    'Add ether_token as an env var. ' +
-    'For local: add ether_token=<your-token> to .dev.var. ' +
-    'For hosted worker environment add ether_token to the worker secrets: npx wrangler secret put ether_token',
+  REQUIRED_ALCHEMY_API_KEY_ERROR: 'ALCHEMY_API_KEY is a required env var',
+  REQUIRED_ALCHEMY_API_KEY_SUGGESTION:
+    'Add ALCHEMY_API_KEY as an env var. ' +
+    'For local: add ALCHEMY_API_KEY=<your-token> to .dev.var. ' +
+    'For hosted worker environment add ALCHEMY_API_KEY to the worker secrets: npx wrangler secret put ALCHEMY_API_KEY',
 });
 
 class EtherLookup extends LookupBase {
@@ -24,9 +24,9 @@ class EtherLookup extends LookupBase {
   public async doLookup(name: string): Promise<LookupData> {
     if (!this.etherToken) {
       throw new RequiredEnvMissing(
-        ERRORS.REQUIRED_ETHER_TOKEN_ERROR,
-        'ether_token',
-        ERRORS.REQUIRED_ETHER_TOKEN_SUGGESTION
+        ERRORS.REQUIRED_ALCHEMY_API_KEY_ERROR,
+        'ALCHEMY_API_KEY',
+        ERRORS.REQUIRED_ALCHEMY_API_KEY_SUGGESTION
       );
     }
 

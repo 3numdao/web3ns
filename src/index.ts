@@ -17,8 +17,8 @@ const supportedExtensions: string[] = ['.eth', '.avax'];
 
 export interface Env {
   // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-  NAMES: KVNamespace;
-  ether_token: string;
+  names: KVNamespace;
+  ALCHEMY_API_KEY: string;
   //
   // Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
   // MY_DURABLE_OBJECT: DurableObjectNamespace;
@@ -30,13 +30,13 @@ export interface Env {
 const handleLookup = async (name: string, env: Env) => {
   switch (name.split('.').pop()) {
     case 'eth': {
-      const etherLookup = new EtherLookup(env.ether_token);
-      const result = await etherLookup.execute(name, env.NAMES);
+      const etherLookup = new EtherLookup(env.ALCHEMY_API_KEY);
+      const result = await etherLookup.execute(name, env.names);
       return result;
     }
     case 'avax': {
       const avaxLookup = new AvaxLookup();
-      const result = await avaxLookup.execute(name, env.NAMES);
+      const result = await avaxLookup.execute(name, env.names);
       return result;
     }
     default: {

@@ -22,11 +22,11 @@ const expectedPhoneNotFoundCode = 'PhoneNotFound';
 const expectedPhoneNotFoundDescription = 'ENS name did not have a phone number';
 const expectedEtherNotFoundDescription = 'ENS name was not found';
 const expectedEtherNotFoundCode = 'ENSNotFound';
-const expectedEtherTokenErrorMessage = 'ether_token is a required env var';
+const expectedEtherTokenErrorMessage = 'ALCHEMY_API_KEY is a required env var';
 const expectedRequiredEtherToken =
-  'Add ether_token as an env var. ' +
-  'For local: add ether_token=<your-token> to .dev.var. ' +
-  'For hosted worker environment add ether_token to the worker secrets: npx wrangler secret put ether_token';
+  'Add ALCHEMY_API_KEY as an env var. ' +
+  'For local: add ALCHEMY_API_KEY=<your-token> to .dev.var. ' +
+  'For hosted worker environment add ALCHEMY_API_KEY to the worker secrets: npx wrangler secret put ALCHEMY_API_KEY';
 
 // #region Helper functions
 const createKvItem = (
@@ -134,7 +134,7 @@ describe('doLookup should', () => {
     expect(lookupData).toEqual(expected);
   });
 
-  test('throw error when ether token was not given', async () => {
+  test('throw error when provider API key was not given', async () => {
     mockEthers(vi.fn());
     etherLookup = new EtherLookup('');
     const name = 'qwerty.eth';
@@ -145,7 +145,7 @@ describe('doLookup should', () => {
       .catch((e: RequiredEnvMissing) => {
         expect(e).toBeInstanceOf(RequiredEnvMissing);
         expect(e.code).toBe(500);
-        expect(e.key).toBe('ether_token');
+        expect(e.key).toBe('ALCHEMY_API_KEY');
         expect(e.suggestion).toBe(expectedRequiredEtherToken);
         expect(e.message).toBe(expectedEtherTokenErrorMessage);
       });
