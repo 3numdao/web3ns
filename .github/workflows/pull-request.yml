@@ -15,6 +15,7 @@ jobs:
           node-version: 18.x
           cache: 'yarn'
       - run: echo 'ALCHEMY_API_KEY={{ secrets.ALCHEMY_API_KEY }}' > .dev.vars
+      - run: echo `pwd`; cat .dev.vars
       - run: yarn
       - run: yarn test
       - run: yarn test:e2e
