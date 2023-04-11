@@ -1,5 +1,5 @@
-import KVItem from '../models/kv-item';
-import LookupData from '../models/lookup-data';
+import KVItem from './models/kv-item';
+import LookupData from './models/lookup-data';
 
 abstract class LookupBase {
   public abstract doLookup(name: string): Promise<LookupData>;

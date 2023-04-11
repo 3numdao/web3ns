@@ -1,8 +1,8 @@
-import LookupBase from '../../base/lookup-base';
-import LookupData from '../../models/lookup-data';
 import { providers } from 'ethers';
-import NotFoundError from '../../models/not-found-error';
-import RequiredEnvMissing from '../../models/required-env-missing';
+import LookupBase from './lookup-base';
+import LookupData from './models/lookup-data';
+import NotFoundError from './models/not-found-error';
+import RequiredEnvMissing from './models/required-env-missing';
 
 const ETH_API_SERVER = 'https://eth-mainnet.alchemyapi.io/v2/';
 

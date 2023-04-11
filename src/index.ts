@@ -9,8 +9,8 @@
  */
 
 import { Router } from 'itty-router';
-import AvaxLookup from './lookups/avax/avax-lookup';
-import EtherLookup from './lookups/ether/ether-lookup';
+import AvaxLookup from './avax-lookup';
+import EtherLookup from './ether-lookup';
 import NotFoundError from './models/not-found-error';
 
 const supportedExtensions: string[] = ['.eth', '.avax'];
@@ -76,7 +76,7 @@ export default {
               ? error.toInformativeObject()
               : error.getMessage(),
             {
-              status: error.status || 500,
+              status: error.code || 500,
             }
           )
         )

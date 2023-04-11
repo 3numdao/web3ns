@@ -1,9 +1,8 @@
-import LookupBase from '../../base/lookup-base';
-import LookupData from '../../models/lookup-data';
-
 import AVVY from '@avvy/client';
 import { providers } from 'ethers';
-import NotFoundError from '../../models/not-found-error';
+import LookupBase from './lookup-base';
+import LookupData from './models/lookup-data';
+import NotFoundError from './models/not-found-error';
 
 class AvaxLookup extends LookupBase {
   public async doLookup(name: string): Promise<LookupData> {

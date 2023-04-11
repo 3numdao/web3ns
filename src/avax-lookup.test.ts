@@ -1,9 +1,9 @@
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-import KVItem from '../../models/kv-item';
-import LookupData from '../../models/lookup-data';
-import AvaxLookup from '../avax/avax-lookup';
 import avvy from '@avvy/client';
-import NotFoundError from '../../models/not-found-error';
+import KVItem from './models/kv-item';
+import LookupData from './models/lookup-data';
+import AvaxLookup from './avax-lookup';
+import NotFoundError from './models/not-found-error';
 
 vi.mock('@avvy/client');
 vi.mock('ethers');

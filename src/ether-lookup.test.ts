@@ -1,10 +1,10 @@
 import { beforeEach, vi, describe, test, expect } from 'vitest';
-import KVItem from '../../models/kv-item';
-import LookupData from '../../models/lookup-data';
-import EtherLookup from './ether-lookup';
 import { providers } from 'ethers';
-import NotFoundError from '../../models/not-found-error';
-import RequiredEnvMissing from '../../models/required-env-missing';
+import KVItem from './models/kv-item';
+import LookupData from './models/lookup-data';
+import EtherLookup from './ether-lookup';
+import NotFoundError from './models/not-found-error';
+import RequiredEnvMissing from './models/required-env-missing';
 
 vi.mock('ethers', async () => {
   return {
