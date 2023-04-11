@@ -11,9 +11,10 @@
 import { Router } from 'itty-router';
 import AvaxLookup from './avax-lookup';
 import EtherLookup from './ether-lookup';
+import LensLookup from './lens-lookup';
 import NotFoundError from './models/not-found-error';
 
-const supportedExtensions: string[] = ['.eth', '.avax'];
+const supportedExtensions: string[] = ['.eth', '.avax', '.lens'];
 
 export interface Env {
   // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
@@ -37,6 +38,11 @@ const handleLookup = async (name: string, env: Env) => {
     case 'avax': {
       const avaxLookup = new AvaxLookup();
       const result = await avaxLookup.execute(name, env.names);
+      return result;
+    }
+    case 'lens': {
+      const lensLookup = new LensLookup(env.ALCHEMY_API_KEY);
+      const result = await lensLookup.execute(name, env.names);
       return result;
     }
     default: {

@@ -15,7 +15,7 @@ describe('Worker', () => {
     await worker.stop();
   });
 
-  it('should return Hello World', async () => {
+  it('should return valid record for 3numdao.avax', async () => {
     const resp = await worker.fetch('/api/v1/lookup/3numdao.avax');
     if (resp) {
       const response = await resp.json();

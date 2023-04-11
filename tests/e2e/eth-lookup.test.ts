@@ -14,7 +14,7 @@ describe('Worker', () => {
     await worker.stop();
   });
 
-  it('should return Hello World', async () => {
+  it('should return valid record for 3num.eth', async () => {
     const resp = await worker.fetch('/api/v1/lookup/3num.eth');
     if (resp) {
       const response = await resp.json();

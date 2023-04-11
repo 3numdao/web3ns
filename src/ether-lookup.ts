@@ -17,12 +17,12 @@ const ERRORS = Object.freeze({
 });
 
 class EtherLookup extends LookupBase {
-  constructor(private etherToken: string) {
+  constructor(private ALCHEMY_API_KEY: string) {
     super();
   }
 
   public async doLookup(name: string): Promise<LookupData> {
-    if (!this.etherToken) {
+    if (!this.ALCHEMY_API_KEY) {
       throw new RequiredEnvMissing(
         ERRORS.REQUIRED_ALCHEMY_API_KEY_ERROR,
         'ALCHEMY_API_KEY',
@@ -31,7 +31,7 @@ class EtherLookup extends LookupBase {
     }
 
     const resolver = await this.getResolver(
-      ETH_API_SERVER + this.etherToken,
+      ETH_API_SERVER + this.ALCHEMY_API_KEY,
       name
     );
     if (!resolver) {
