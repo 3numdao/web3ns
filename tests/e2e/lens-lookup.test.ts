@@ -41,4 +41,23 @@ describe('Worker', () => {
       });
     }
   });
+
+  it('should return farcaster address for boscolo', async () => {
+    const resp = await worker.fetch('/api/v1/lookup/boscolo');
+
+    if (resp) {
+//        console.log('resp ', resp);
+
+//        expect(1).toEqual(1);
+
+        const response = await resp.json();
+        expect(response).toEqual({
+            name: 'boscolo',
+            address: '0x3eFbe95EBdE6042147644Bc39CdfcF54B8E4f523q',
+            phone: '',
+        });
+    }
+  });
+
+
 });

@@ -12,6 +12,7 @@ import { Router } from 'itty-router';
 import AvaxLookup from './avax-lookup';
 import EtherLookup from './ether-lookup';
 import LensLookup from './lens-lookup';
+import FarcasterLookup from './farcaster-lookup';
 import NotFoundError from './models/not-found-error';
 
 const supportedExtensions: string[] = ['.eth', '.avax', '.lens'];
@@ -46,11 +47,9 @@ const handleLookup = async (name: string, env: Env) => {
       return result;
     }
     default: {
-      throw new NotFoundError(
-        'Could not match extension to a supported type',
-        name,
-        null
-      );
+      const farcasterLookup = new FarcasterLookup(env.ALCHEMY_API_KEY);
+      const result = await farcasterLookup.execute(name, env.names);
+      return result;
     }
   }
 };
