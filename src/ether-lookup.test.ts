@@ -1,10 +1,9 @@
 import { beforeEach, vi, describe, test, expect } from 'vitest';
-import KVItem from '../../models/kv-item';
-import LookupData from '../../models/lookup-data';
-import EtherLookup from './ether-lookup';
 import { providers } from 'ethers';
-import NotFoundError from '../../models/not-found-error';
-import RequiredEnvMissing from '../../models/required-env-missing';
+import KVItem from './models/kv-item';
+import LookupData from './models/lookup-data';
+import EtherLookup from './ether-lookup';
+import { Web3nsNotFoundError, Web3nsError } from './models/web3ns-errors';
 
 vi.mock('ethers', async () => {
   return {
@@ -18,15 +17,7 @@ const defaultPhone = 'test-phone';
 const defaultAddress = 'test-address';
 const defaultToken = 'test-token';
 
-const expectedPhoneNotFoundCode = 'PhoneNotFound';
-const expectedPhoneNotFoundDescription = 'ENS name did not have a phone number';
 const expectedEtherNotFoundDescription = 'ENS name was not found';
-const expectedEtherNotFoundCode = 'ENSNotFound';
-const expectedEtherTokenErrorMessage = 'ALCHEMY_API_KEY is a required env var';
-const expectedRequiredEtherToken =
-  'Add ALCHEMY_API_KEY as an env var. ' +
-  'For local: add ALCHEMY_API_KEY=<your-token> to .dev.var. ' +
-  'For hosted worker environment add ALCHEMY_API_KEY to the worker secrets: npx wrangler secret put ALCHEMY_API_KEY';
 
 // #region Helper functions
 const createKvItem = (
@@ -142,12 +133,10 @@ describe('doLookup should', () => {
     return etherLookup
       .doLookup(name)
       .then(() => expect.fail)
-      .catch((e: RequiredEnvMissing) => {
-        expect(e).toBeInstanceOf(RequiredEnvMissing);
-        expect(e.code).toBe(500);
-        expect(e.key).toBe('ALCHEMY_API_KEY');
-        expect(e.suggestion).toBe(expectedRequiredEtherToken);
-        expect(e.message).toBe(expectedEtherTokenErrorMessage);
+      .catch((e: Web3nsError) => {
+        expect(e).toBeInstanceOf(Web3nsError);
+        expect(e.httpStatus).toBe(500);
+        expect(e.message).toBe('Provider API key was not given');
       });
   });
 
@@ -158,33 +147,10 @@ describe('doLookup should', () => {
     return etherLookup
       .doLookup(name)
       .then(() => expect.fail)
-      .catch((e: NotFoundError) => {
-        expect(e).toBeInstanceOf(NotFoundError);
-        expect(e.address).toBe(null);
-        expect(e.code).toBe(404);
-        expect(e.name).toBe(expectedEtherNotFoundCode);
-        expect(e.message).toBe(expectedEtherNotFoundDescription);
-      });
-  });
-
-  test('throw error when phone not found', async () => {
-    mockEthers(
-      vi.fn().mockImplementation(() => ({
-        getAddress: vi.fn().mockResolvedValue(defaultAddress),
-        getText: vi.fn().mockResolvedValue(null),
-      }))
-    );
-    const name = 'qwerty.avax';
-
-    return etherLookup
-      .doLookup(name)
-      .then(() => expect.fail)
-      .catch((e: NotFoundError) => {
-        expect(e).toBeInstanceOf(NotFoundError);
-        expect(e.address).toBe(defaultAddress);
-        expect(e.code).toBe(404);
-        expect(e.name).toBe(expectedPhoneNotFoundCode);
-        expect(e.message).toBe(expectedPhoneNotFoundDescription);
+      .catch((e: Web3nsNotFoundError) => {
+        expect(e).toBeInstanceOf(Web3nsError);
+        expect(e.httpStatus).toBe(404);
+        expect(e.message).toBe('ENS name resolver was not found');
       });
   });
 });

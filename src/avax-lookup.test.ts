@@ -1,9 +1,9 @@
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-import KVItem from '../../models/kv-item';
-import LookupData from '../../models/lookup-data';
-import AvaxLookup from '../avax/avax-lookup';
 import avvy from '@avvy/client';
-import NotFoundError from '../../models/not-found-error';
+import KVItem from './models/kv-item';
+import LookupData from './models/lookup-data';
+import AvaxLookup from './avax-lookup';
+import Web3nsNotFoundError from './models/web3ns-errors';
 
 vi.mock('@avvy/client');
 vi.mock('ethers');
@@ -16,11 +16,7 @@ const PHONE = 9;
 const defaultPhone = 'test-phone';
 const defaultAddress = 'test-address';
 
-const expectedPhoneNotFoundCode = 'PhoneNotFound';
-const expectedPhoneNotFoundDescription =
-  'Avvy name did not have a phone number';
 const expectedAvvyNotFoundDescription = 'Avvy name was not found';
-const expectedAvvyNotFoundCode = 'AvvyNotFound';
 
 // #region Helper functions
 const createKvItem = (
@@ -219,28 +215,10 @@ describe('doLookup should', () => {
     return avaxLookup
       .doLookup(name)
       .then(() => expect.fail)
-      .catch((e: NotFoundError) => {
-        expect(e).toBeInstanceOf(NotFoundError);
-        expect(e.address).toBe(null);
-        expect(e.code).toBe(404);
-        expect(e.name).toBe(expectedAvvyNotFoundCode);
+      .catch((e: Web3nsNotFoundError) => {
+        expect(e).toBeInstanceOf(Web3nsNotFoundError);
+        expect(e.httpStatus).toBe(404);
         expect(e.message).toBe(expectedAvvyNotFoundDescription);
-      });
-  });
-
-  test('throw error when phone not found', () => {
-    mockAvvy(mockAvvyResolverHappyPath);
-    const name = 'qwerty.avax';
-
-    return avaxLookup
-      .doLookup(name)
-      .then(() => expect.fail)
-      .catch((e: NotFoundError) => {
-        expect(e).toBeInstanceOf(NotFoundError);
-        expect(e.address).toBe(defaultAddress);
-        expect(e.code).toBe(404);
-        expect(e.name).toBe(expectedPhoneNotFoundCode);
-        expect(e.message).toBe(expectedPhoneNotFoundDescription);
       });
   });
 });

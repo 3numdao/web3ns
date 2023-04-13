@@ -9,11 +9,13 @@
  */
 
 import { Router } from 'itty-router';
-import AvaxLookup from './lookups/avax/avax-lookup';
-import EtherLookup from './lookups/ether/ether-lookup';
-import NotFoundError from './models/not-found-error';
+import AvaxLookup from './avax-lookup';
+import EtherLookup from './ether-lookup';
+import LensLookup from './lens-lookup';
+import FarcasterLookup from './farcaster-lookup';
+import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
 
-const supportedExtensions: string[] = ['.eth', '.avax'];
+const supportedExtensions: string[] = ['.eth', '.avax', '.lens'];
 
 export interface Env {
   // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
@@ -39,12 +41,15 @@ const handleLookup = async (name: string, env: Env) => {
       const result = await avaxLookup.execute(name, env.names);
       return result;
     }
+    case 'lens': {
+      const lensLookup = new LensLookup(env.ALCHEMY_API_KEY);
+      const result = await lensLookup.execute(name, env.names);
+      return result;
+    }
     default: {
-      throw new NotFoundError(
-        'Could not match extension to a supported type',
-        name,
-        null
-      );
+      const farcasterLookup = new FarcasterLookup(env.ALCHEMY_API_KEY);
+      const result = await farcasterLookup.execute(name, env.names);
+      return result;
     }
   }
 };
@@ -70,13 +75,10 @@ export default {
         .handle(request)
         .then((result) => Response.json(result))
         // TODO: This is wrong. Copy logic from ethercache
-        .catch((error) =>
-          Response.json(
-            error.toInformativeObject
-              ? error.toInformativeObject()
-              : error.getMessage(),
+        .catch((error) => 
+          Response.json( (error instanceof Web3nsError) ? error.toObject() : error.message,
             {
-              status: error.status || 500,
+              status: (error instanceof Web3nsError) ? error.httpStatus || 500 : 500,
             }
           )
         )
