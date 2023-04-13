@@ -1,7 +1,12 @@
-import KVItem from './models/kv-item';
-import LookupData from './models/lookup-data';
+import KVItem from './kv-item';
 
-abstract class LookupBase {
+export interface LookupData {
+  name: string;
+  phone: string;
+  address: string;
+}
+
+export abstract class LookupBase {
   public abstract doLookup(name: string): Promise<LookupData>;
 
   public async execute(
@@ -45,5 +50,3 @@ abstract class LookupBase {
     return kvItem;
   }
 }
-
-export default LookupBase;

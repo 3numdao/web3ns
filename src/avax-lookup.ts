@@ -1,7 +1,6 @@
 import AVVY from '@avvy/client';
 import { providers } from 'ethers';
-import LookupBase from './lookup-base';
-import LookupData from './models/lookup-data';
+import { LookupData, LookupBase } from './models/lookup';
 import Web3nsNotFoundError from './models/web3ns-errors';
 
 class AvaxLookup extends LookupBase {

@@ -1,7 +1,7 @@
 import { beforeEach, vi, describe, test, expect } from 'vitest';
 import { providers } from 'ethers';
 import KVItem from './models/kv-item';
-import LookupData from './models/lookup-data';
+import { LookupData } from './models/lookup';
 import EtherLookup from './ether-lookup';
 import { Web3nsNotFoundError, Web3nsError } from './models/web3ns-errors';
 
@@ -135,8 +135,8 @@ describe('doLookup should', () => {
       .then(() => expect.fail)
       .catch((e: Web3nsError) => {
         expect(e).toBeInstanceOf(Web3nsError);
-        expect(e.httpStatus).toBe(500);
-        expect(e.message).toBe('Provider API key was not given');
+        expect(e.httpStatus).toBe(404);
+        expect(e.message).toBe('ENS name resolver was not found');
       });
   });
 
