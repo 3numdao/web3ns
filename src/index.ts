@@ -13,7 +13,7 @@ import AvaxLookup from './avax-lookup';
 import EtherLookup from './ether-lookup';
 import LensLookup from './lens-lookup';
 import FarcasterLookup from './farcaster-lookup';
-import NotFoundError from './models/not-found-error';
+import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
 
 const supportedExtensions: string[] = ['.eth', '.avax', '.lens'];
 
@@ -75,13 +75,10 @@ export default {
         .handle(request)
         .then((result) => Response.json(result))
         // TODO: This is wrong. Copy logic from ethercache
-        .catch((error) =>
-          Response.json(
-            error.toInformativeObject
-              ? error.toInformativeObject()
-              : error.getMessage(),
+        .catch((error) => 
+          Response.json( (error instanceof Web3nsError) ? error.toObject() : error.message,
             {
-              status: error.code || 500,
+              status: (error instanceof Web3nsError) ? error.httpStatus || 500 : 500,
             }
           )
         )

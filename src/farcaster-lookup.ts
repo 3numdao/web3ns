@@ -1,8 +1,7 @@
 import { providers, ethers, BigNumber } from 'ethers';
 import LookupBase from './lookup-base';
 import LookupData from './models/lookup-data';
-import NotFoundError from './models/not-found-error';
-import RequiredEnvMissing from './models/required-env-missing';
+import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
 
 const ALCHEMY_API_URL = 'https://eth-goerli.g.alchemy.com/v2/ZVODbV10AZE1gVClqakv_ZPwTxr2kdAn'
 
@@ -10,13 +9,6 @@ const ALCHEMY_API_SERVER = 'https://eth-goerli.g.alchemy.com/v2/';
 
 const FARCASTER_NAME_CONTRACT_ADDRESS = '0xe3be01d99baa8db9905b33a3ca391238234b79d1';
 
-const ERRORS = Object.freeze({
-  REQUIRED_ALCHEMY_API_KEY_ERROR: 'ALCHEMY_API_KEY is a required env var',
-  REQUIRED_ALCHEMY_API_KEY_SUGGESTION:
-    'Add ALCHEMY_API_KEY as an env var. ' +
-    'For local: add ALCHEMY_API_KEY=<your-token> to .dev.var. ' +
-    'For hosted worker environment add ALCHEMY_API_KEY to the worker secrets: npx wrangler secret put ALCHEMY_API_KEY',
-});
 
 function asciiToHex(str: string) {
   let hex = "";
@@ -34,11 +26,7 @@ class FarcasterLookup extends LookupBase {
 
   public async doLookup(name: string): Promise<LookupData> {
     if (!this.ALCHEMY_API_KEY) {
-      throw new RequiredEnvMissing(
-        ERRORS.REQUIRED_ALCHEMY_API_KEY_ERROR,
-        'ALCHEMY_API_KEY',
-        ERRORS.REQUIRED_ALCHEMY_API_KEY_SUGGESTION
-      );
+      throw new Web3nsError('Missing API key', 'InternalEnvError');
     }
 
     const provider = new providers.StaticJsonRpcProvider({
@@ -55,11 +43,13 @@ class FarcasterLookup extends LookupBase {
     let addr;
     try {
       addr = await contract.ownerOf('0x' + asciiToHex(name));
-    } catch (e) {
-      //if (e.code === -32000) {
-      console.log('error: ', e.code);
+    } catch (error) {
+      if (error.code === 'CALL_EXCEPTION') {
+        throw new Web3nsNotFoundError('Farcaster name was not found');
+      } else {
+        throw new Web3nsError('Farcaster name lookup failed', 'InternalError');
+      }
     }
-    //const addr = await contract.ownerOf('0x' + asciiToHex(name));
 
     const address = addr.toString();
     const phone = '';

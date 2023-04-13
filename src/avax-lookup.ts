@@ -2,15 +2,23 @@ import AVVY from '@avvy/client';
 import { providers } from 'ethers';
 import LookupBase from './lookup-base';
 import LookupData from './models/lookup-data';
-import NotFoundError from './models/not-found-error';
+import Web3nsNotFoundError from './models/web3ns-errors';
 
 class AvaxLookup extends LookupBase {
   public async doLookup(name: string): Promise<LookupData> {
     const response = await this.getAvvyResponse(name);
 
-    const address = await this.getAvvyAddress(response);
+    let address;
+    try {
+      address = await this.getAvvyAddress(response);
+    } catch (e) {
+      throw new Web3nsNotFoundError('Avvy name was not found');
+    }
 
-    const phone = await this.getAvvyPhone(response, address);
+    let phone= '';
+    try {
+      phone = await this.getAvvyPhone(response, address);
+    } catch {}
 
     return { name, phone, address };
   }
@@ -25,8 +33,9 @@ class AvaxLookup extends LookupBase {
 
     const avvy = new AVVY(provider);
     const response = await avvy.name(name);
+    
     if (!response) {
-      throw new NotFoundError('Avvy name was not found', 'AvvyNotFound', null);
+      throw new Web3nsNotFoundError('Avvy name was not found');
     }
 
     return response;
@@ -42,13 +51,6 @@ class AvaxLookup extends LookupBase {
 
   private async getAvvyPhone(response: any, address: string): Promise<string> {
     const phone = await response.resolve(AVVY.RECORDS.PHONE);
-    if (!phone) {
-      throw new NotFoundError(
-        'Avvy name did not have a phone number',
-        'PhoneNotFound',
-        address
-      );
-    }
 
     return phone;
   }

@@ -1,20 +1,11 @@
 import { providers } from 'ethers';
 import LookupBase from './lookup-base';
 import LookupData from './models/lookup-data';
-import NotFoundError from './models/not-found-error';
-import RequiredEnvMissing from './models/required-env-missing';
+import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
 
 const ETH_API_SERVER = 'https://eth-mainnet.alchemyapi.io/v2/';
 
 const PHONE_TEXT = 'phone';
-
-const ERRORS = Object.freeze({
-  REQUIRED_ALCHEMY_API_KEY_ERROR: 'ALCHEMY_API_KEY is a required env var',
-  REQUIRED_ALCHEMY_API_KEY_SUGGESTION:
-    'Add ALCHEMY_API_KEY as an env var. ' +
-    'For local: add ALCHEMY_API_KEY=<your-token> to .dev.var. ' +
-    'For hosted worker environment add ALCHEMY_API_KEY to the worker secrets: npx wrangler secret put ALCHEMY_API_KEY',
-});
 
 class EtherLookup extends LookupBase {
   constructor(private ALCHEMY_API_KEY: string) {
@@ -23,11 +14,7 @@ class EtherLookup extends LookupBase {
 
   public async doLookup(name: string): Promise<LookupData> {
     if (!this.ALCHEMY_API_KEY) {
-      throw new RequiredEnvMissing(
-        ERRORS.REQUIRED_ALCHEMY_API_KEY_ERROR,
-        'ALCHEMY_API_KEY',
-        ERRORS.REQUIRED_ALCHEMY_API_KEY_SUGGESTION
-      );
+      throw new Web3nsError('Provider API key was not given', 'InternalEnvError');
     }
 
     const resolver = await this.getResolver(
@@ -35,17 +22,10 @@ class EtherLookup extends LookupBase {
       name
     );
     if (!resolver) {
-      throw new NotFoundError('ENS name was not found', 'ENSNotFound', null);
+      throw new Web3nsNotFoundError('ENS name resolver was not found');
     }
 
     const [address, phone] = await this.getResolverData(resolver, PHONE_TEXT);
-    if (!phone) {
-      throw new NotFoundError(
-        'ENS name did not have a phone number',
-        'PhoneNotFound',
-        address
-      );
-    }
 
     return { name, phone, address };
   }

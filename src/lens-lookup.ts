@@ -1,8 +1,7 @@
 import { providers, ethers, BigNumber } from 'ethers';
 import LookupBase from './lookup-base';
 import LookupData from './models/lookup-data';
-import NotFoundError from './models/not-found-error';
-import RequiredEnvMissing from './models/required-env-missing';
+import { Web3nsNotFoundError } from './models/web3ns-errors';
 
 const ALCHEMY_API_SERVER = 'https://polygon-mainnet.g.alchemy.com/v2/'; // https://eth-mainnet.alchemyapi.io/v2/';
 
@@ -44,7 +43,7 @@ class LensLookup extends LookupBase {
   
     // Make sure the profileId is not 0
     if (profileId.eq(0)) {
-      throw new NotFoundError('Lens name was not found', 'LensNotFound', null);
+      throw new Web3nsNotFoundError('Lens name was not found');
     }
 
     const addr = await contract.ownerOf(profileId);
