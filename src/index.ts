@@ -13,6 +13,7 @@ import AvaxLookup from './avax-lookup';
 import EtherLookup from './ether-lookup';
 import LensLookup from './lens-lookup';
 import FarcasterLookup from './farcaster-lookup';
+import E164Lookup from './e164-lookup';
 import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
 
 const supportedExtensions: string[] = ['.eth', '.avax', '.lens'];
@@ -27,12 +28,22 @@ export interface Env {
   //
   // Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
   // MY_BUCKET: R2Bucket;
+  ETH_API_SERVER: string;
 }
 
 const handleLookup = async (name: string, env: Env) => {
+
+  if (!env.ALCHEMY_API_KEY) {
+    throw new Web3nsError('Provider API key was not given', 'InternalEnvError');
+  }
+
+  const ethProvider     = 'https://eth-mainnet.alchemyapi.io/v2/'     + env.ALCHEMY_API_KEY;
+  const polygonProvider = 'https://polygon-mainnet.g.alchemy.com/v2/' + env.ALCHEMY_API_KEY;
+  const goerliProvider  = 'https://eth-goerli.g.alchemy.com/v2/'      + env.ALCHEMY_API_KEY;
+
   switch (name.split('.').pop()) {
     case 'eth': {
-      const etherLookup = new EtherLookup(env.ALCHEMY_API_KEY);
+      const etherLookup = new EtherLookup(ethProvider);
       const result = await etherLookup.execute(name, env.names);
       return result;
     }
@@ -42,13 +53,19 @@ const handleLookup = async (name: string, env: Env) => {
       return result;
     }
     case 'lens': {
-      const lensLookup = new LensLookup(env.ALCHEMY_API_KEY);
+      const lensLookup = new LensLookup(polygonProvider);
       const result = await lensLookup.execute(name, env.names);
       return result;
     }
     default: {
-      const farcasterLookup = new FarcasterLookup(env.ALCHEMY_API_KEY);
-      const result = await farcasterLookup.execute(name, env.names);
+      let result;
+      if (name[0] === '+') {
+        const e164Lookup = new E164Lookup(ethProvider);
+        result = await e164Lookup.execute(name, env.names);
+      } else {
+        const farcasterLookup = new FarcasterLookup(goerliProvider);
+        result = await farcasterLookup.execute(name, env.names);
+      }
       return result;
     }
   }

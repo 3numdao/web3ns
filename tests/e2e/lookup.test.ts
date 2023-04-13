@@ -69,10 +69,6 @@ describe('Worker', () => {
     const resp = await worker.fetch('/api/v1/lookup/boscolo');
 
     if (resp) {
-//        console.log('resp ', resp);
-
-//        expect(1).toEqual(1);
-
         const response = await resp.json();
         expect(response).toEqual({
             name: 'boscolo',
@@ -82,5 +78,17 @@ describe('Worker', () => {
     }
   });
 
+  it('should return address for +18059024256', async () => {
+    const resp = await worker.fetch('/api/v1/lookup/+18059024256');
+
+    if (resp) {
+        const response = await resp.json();
+        expect(response).toEqual({
+            name: '+18059024256',
+            address: '0x6697d7cd36eD1782dFdb721d3c3a1f4F901b957d',
+            phone: '',
+        });
+    }
+  });
 
 });

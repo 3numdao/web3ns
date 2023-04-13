@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import avvy from '@avvy/client';
 import KVItem from './models/kv-item';
-import LookupData from './models/lookup-data';
+import { LookupData } from './models/lookup';
 import AvaxLookup from './avax-lookup';
 import Web3nsNotFoundError from './models/web3ns-errors';
 

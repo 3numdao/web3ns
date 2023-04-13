@@ -1,26 +1,18 @@
 import { providers } from 'ethers';
-import LookupBase from './lookup-base';
-import LookupData from './models/lookup-data';
+import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
-
-const ETH_API_SERVER = 'https://eth-mainnet.alchemyapi.io/v2/';
 
 const PHONE_TEXT = 'phone';
 
 class EtherLookup extends LookupBase {
-  constructor(private ALCHEMY_API_KEY: string) {
+  constructor(private ALCHEMY_API_URL: string) {
     super();
   }
 
   public async doLookup(name: string): Promise<LookupData> {
-    if (!this.ALCHEMY_API_KEY) {
-      throw new Web3nsError('Provider API key was not given', 'InternalEnvError');
-    }
+    
+    const resolver = await this.getResolver(this.ALCHEMY_API_URL, name);
 
-    const resolver = await this.getResolver(
-      ETH_API_SERVER + this.ALCHEMY_API_KEY,
-      name
-    );
     if (!resolver) {
       throw new Web3nsNotFoundError('ENS name resolver was not found');
     }

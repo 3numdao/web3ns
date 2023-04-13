@@ -1,11 +1,8 @@
 import { providers, ethers, BigNumber } from 'ethers';
-import LookupBase from './lookup-base';
-import LookupData from './models/lookup-data';
+import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
 
 const ALCHEMY_API_URL = 'https://eth-goerli.g.alchemy.com/v2/ZVODbV10AZE1gVClqakv_ZPwTxr2kdAn'
-
-const ALCHEMY_API_SERVER = 'https://eth-goerli.g.alchemy.com/v2/';
 
 const FARCASTER_NAME_CONTRACT_ADDRESS = '0xe3be01d99baa8db9905b33a3ca391238234b79d1';
 
@@ -20,18 +17,14 @@ function asciiToHex(str: string) {
 }
 
 class FarcasterLookup extends LookupBase {
-  constructor(private ALCHEMY_API_KEY: string) {
+  constructor(private ALCHEMY_API_URL: string) {
     super();
   }
 
   public async doLookup(name: string): Promise<LookupData> {
-    if (!this.ALCHEMY_API_KEY) {
-      throw new Web3nsError('Missing API key', 'InternalEnvError');
-    }
 
     const provider = new providers.StaticJsonRpcProvider({
-//      url: ALCHEMY_API_URL,
-      url: ALCHEMY_API_SERVER + this.ALCHEMY_API_KEY,
+      url: this.ALCHEMY_API_URL,
       skipFetchSetup: true,
     });
 

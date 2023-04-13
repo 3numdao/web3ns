@@ -1,36 +1,18 @@
 import { providers, ethers, BigNumber } from 'ethers';
-import LookupBase from './lookup-base';
-import LookupData from './models/lookup-data';
+import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsNotFoundError } from './models/web3ns-errors';
-
-const ALCHEMY_API_SERVER = 'https://polygon-mainnet.g.alchemy.com/v2/'; // https://eth-mainnet.alchemyapi.io/v2/';
 
 const LENS_LLP_CONTRACT_ADDRESS = '0xDb46d1Dc155634FbC732f92E853b10B288AD5a1d';
 
-const ERRORS = Object.freeze({
-  REQUIRED_ALCHEMY_API_KEY_ERROR: 'ALCHEMY_API_KEY is a required env var',
-  REQUIRED_ALCHEMY_API_KEY_SUGGESTION:
-    'Add ALCHEMY_API_KEY as an env var. ' +
-    'For local: add ALCHEMY_API_KEY=<your-token> to .dev.var. ' +
-    'For hosted worker environment add ALCHEMY_API_KEY to the worker secrets: npx wrangler secret put ALCHEMY_API_KEY',
-});
-
 class LensLookup extends LookupBase {
-  constructor(private ALCHEMY_API_KEY: string) {
+  constructor(private ALCHEMY_API_URL: string) {
     super();
   }
 
   public async doLookup(name: string): Promise<LookupData> {
-    if (!this.ALCHEMY_API_KEY) {
-      throw new RequiredEnvMissing(
-        ERRORS.REQUIRED_ALCHEMY_API_KEY_ERROR,
-        'ALCHEMY_API_KEY',
-        ERRORS.REQUIRED_ALCHEMY_API_KEY_SUGGESTION
-      );
-    }
 
     const provider = new providers.StaticJsonRpcProvider({
-      url: ALCHEMY_API_SERVER + this.ALCHEMY_API_KEY,
+      url: this.ALCHEMY_API_URL,
       skipFetchSetup: true,
     });
 
