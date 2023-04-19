@@ -8,15 +8,17 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
+import { createCors } from 'itty-cors';
 import { Router } from 'itty-router';
 import AvaxLookup from './avax-lookup';
-import EtherLookup from './ether-lookup';
-import LensLookup from './lens-lookup';
-import FarcasterLookup from './farcaster-lookup';
 import E164Lookup from './e164-lookup';
-import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
+import EtherLookup from './ether-lookup';
+import FarcasterLookup from './farcaster-lookup';
+import LensLookup from './lens-lookup';
+import { Web3nsError } from './models/web3ns-errors';
 
 const supportedExtensions: string[] = ['.eth', '.avax', '.lens'];
+const { preflight, corsify } = createCors();
 
 export interface Env {
   // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
@@ -32,14 +34,16 @@ export interface Env {
 }
 
 const handleLookup = async (name: string, env: Env) => {
-
   if (!env.ALCHEMY_API_KEY) {
     throw new Web3nsError('Provider API key was not given', 'InternalEnvError');
   }
 
-  const ethProvider     = 'https://eth-mainnet.alchemyapi.io/v2/'     + env.ALCHEMY_API_KEY;
-  const polygonProvider = 'https://polygon-mainnet.g.alchemy.com/v2/' + env.ALCHEMY_API_KEY;
-  const goerliProvider  = 'https://eth-goerli.g.alchemy.com/v2/'      + env.ALCHEMY_API_KEY;
+  const ethProvider =
+    'https://eth-mainnet.alchemyapi.io/v2/' + env.ALCHEMY_API_KEY;
+  const polygonProvider =
+    'https://polygon-mainnet.g.alchemy.com/v2/' + env.ALCHEMY_API_KEY;
+  const goerliProvider =
+    'https://eth-goerli.g.alchemy.com/v2/' + env.ALCHEMY_API_KEY;
 
   switch (name.split('.').pop()) {
     case 'eth': {
@@ -80,6 +84,7 @@ export default {
     const router = Router();
 
     router
+      .all('*', (req) => preflight(req as any))
       .get('/api/v1/extensions', () => {
         return supportedExtensions;
       })
@@ -90,13 +95,17 @@ export default {
     return (
       router
         .handle(request)
-        .then((result) => Response.json(result))
+        .then((result) => corsify(Response.json(result)))
         // TODO: This is wrong. Copy logic from ethercache
-        .catch((error) => 
-          Response.json( (error instanceof Web3nsError) ? error.toObject() : error.message,
-            {
-              status: (error instanceof Web3nsError) ? error.httpStatus || 500 : 500,
-            }
+        .catch((error) =>
+          corsify(
+            Response.json(
+              error instanceof Web3nsError ? error.toObject() : error.message,
+              {
+                status:
+                  error instanceof Web3nsError ? error.httpStatus || 500 : 500,
+              }
+            )
           )
         )
     );
