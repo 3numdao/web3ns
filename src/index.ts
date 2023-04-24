@@ -69,7 +69,7 @@ const handleAddressLookup = async (address: string, env: Env) => {
 
   const etherLookup = new AddressLookup(env.ALCHEMY_API_KEY);
 
-  return await etherLookup.execute(address, env.names);
+  return await etherLookup.execute(address, env.addresses);
 }
 
 
