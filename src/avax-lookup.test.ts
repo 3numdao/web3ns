@@ -1,6 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import avvy from '@avvy/client';
-import KVItem from './models/kv-item';
 import { LookupData } from './models/lookup';
 import AvaxLookup from './avax-lookup';
 import Web3nsNotFoundError from './models/web3ns-errors';
@@ -20,10 +19,11 @@ const expectedAvvyNotFoundDescription = 'Avvy name was not found';
 
 // #region Helper functions
 const createKvItem = (
+  name: string,
   phone: string = defaultPhone,
   address: string = defaultAddress
-): KVItem => {
-  return { phone, address };
+): LookupData => {
+  return { name, phone, address };
 };
 
 const createLookupData = (
@@ -35,12 +35,12 @@ const createLookupData = (
 };
 
 const createKvItemFromLookupData = (lookupData: LookupData) => {
-  return { address: lookupData.address, phone: lookupData.phone };
+  return { name: lookupData.name, address: lookupData.address, phone: lookupData.phone };
 };
 //#endregion
 
 //#region Mocks
-const mockNamespace = (getResponse: KVItem | null = createKvItem()) => {
+const mockNamespace = (getResponse: LookupData | null = createKvItem()) => {
   const namespace = {
     get: vi.fn().mockResolvedValue(getResponse),
     put: vi.fn().mockResolvedValue(undefined),
@@ -88,49 +88,6 @@ const mockAvvyResolverHappyPath = vi.fn().mockImplementation((type: number) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
-});
-
-describe('getName should', () => {
-  let namespace: KVNamespace;
-  let avaxLookup: AvaxLookup;
-
-  beforeEach(() => {
-    namespace = mockNamespace() as any;
-    avaxLookup = new AvaxLookup();
-  });
-
-  test('call get on namespace with given params', async () => {
-    const name = 'qwerty';
-    await avaxLookup.getName(name, namespace);
-
-    expect(namespace.get).toHaveBeenCalledWith(name, { type: 'json' });
-  });
-});
-
-describe('saveName should', () => {
-  let namespace: KVNamespace;
-  let avaxLookup: AvaxLookup;
-
-  beforeEach(() => {
-    namespace = mockNamespace() as any;
-    avaxLookup = new AvaxLookup();
-  });
-
-  test('call put on the given namespace with params', async () => {
-    const name = 'qwerty.avax';
-    const lookupData = createLookupData(name);
-    const minutes = Math.floor(Math.random() * 10);
-
-    const expectedKvItem = JSON.stringify(
-      createKvItemFromLookupData(lookupData)
-    );
-
-    await avaxLookup.saveName(lookupData, namespace, minutes);
-
-    expect(namespace.put).toHaveBeenCalledWith(name, expectedKvItem, {
-      expirationTtl: minutes * 60,
-    });
-  });
 });
 
 describe('doLookup should', () => {
@@ -235,14 +192,15 @@ describe('execute should', () => {
   });
 
   test('get lookup from getName', async () => {
+    const name = 'qwerty.avax';
+
     const namespace = {
       get: vi
         .fn()
-        .mockImplementation(() => createKvItem(testPhone, testAddress)),
+        .mockImplementation(() => createKvItem(name, testPhone, testAddress)),
       put: vi.fn(),
     } as any;
 
-    const name = 'qwerty.avax';
     const expectedData = createLookupData(name, testPhone, testAddress);
 
     const lookupData = await avaxLookup.execute(name, namespace);
@@ -252,7 +210,6 @@ describe('execute should', () => {
   });
 
   test('get lookup from doLookup when name empty', async () => {
-    const expectedKVItem = { address: 'test-address', phone: 'test-phone' };
     const namespace = mockNamespace(null) as any;
 
     const name = 'qwerty.avax';
@@ -268,7 +225,7 @@ describe('execute should', () => {
     });
     expect(namespace.put).toHaveBeenCalledWith(
       name,
-      JSON.stringify(expectedKVItem),
+      JSON.stringify({ name: 'qwerty.avax', phone: 'test-phone', address: 'test-address'}),
       { expirationTtl: 5 * 60 }
     );
   });

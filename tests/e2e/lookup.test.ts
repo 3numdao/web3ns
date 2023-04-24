@@ -91,4 +91,30 @@ describe('Worker', () => {
     }
   });
 
+  it('should return "boscolo.eth" for address 0x6a40260B27B13E52033c211b840f04DC64059748', async () => {
+    const resp = await worker.fetch('/api/v1/address/0x6a40260B27B13E52033c211b840f04DC64059748');
+
+    if (resp) {
+        const response = await resp.json();
+        expect(response).toEqual({
+            eth: { name: 'boscolo.eth' },
+            avax: { name: '' },
+            farcaster: { fid: '' },
+        });
+    }
+  });
+
+  it('should return Farcaster name/d for address 0x3eFbe95EBdE6042147644Bc39CdfcF54B8E4f523', async () => {
+    const resp = await worker.fetch('/api/v1/address/0x3eFbe95EBdE6042147644Bc39CdfcF54B8E4f523');
+
+    if (resp) {
+        const response = await resp.json();
+        expect(response).toEqual({
+            eth: { name: '' },
+            avax: { name: '' },
+            farcaster: { fid: '1898' },
+        });
+    }
+  });
+
 });

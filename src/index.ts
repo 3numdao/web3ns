@@ -1,13 +1,3 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `wrangler dev src/index.ts` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `wrangler publish src/index.ts --name my-worker` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
-
 import { createCors } from 'itty-cors';
 import { Router } from 'itty-router';
 import AvaxLookup from './avax-lookup';
@@ -15,7 +5,13 @@ import E164Lookup from './e164-lookup';
 import EtherLookup from './ether-lookup';
 import FarcasterLookup from './farcaster-lookup';
 import LensLookup from './lens-lookup';
+import AddressLookup from './address-lookup';
 import { Web3nsError } from './models/web3ns-errors';
+import { providers } from 'ethers';
+
+const ALCHEMY_ETH_MAINNET_URL     = 'https://eth-mainnet.alchemyapi.io/v2/';
+const ALCHEMY_POLYGON_MAINNET_URL = 'https://polygon-mainnet.g.alchemy.com/v2/';
+const ALCHEMY_ETH_GOERLI_URL      = 'https://eth-goerli.g.alchemy.com/v2/';
 
 const supportedExtensions: string[] = ['.eth', '.avax', '.lens'];
 const { preflight, corsify } = createCors();
@@ -23,6 +19,8 @@ const { preflight, corsify } = createCors();
 export interface Env {
   // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
   names: KVNamespace;
+  addresses: KVNamespace;
+
   ALCHEMY_API_KEY: string;
   //
   // Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
@@ -38,16 +36,9 @@ const handleLookup = async (name: string, env: Env) => {
     throw new Web3nsError('Provider API key was not given', 'InternalEnvError');
   }
 
-  const ethProvider =
-    'https://eth-mainnet.alchemyapi.io/v2/' + env.ALCHEMY_API_KEY;
-  const polygonProvider =
-    'https://polygon-mainnet.g.alchemy.com/v2/' + env.ALCHEMY_API_KEY;
-  const goerliProvider =
-    'https://eth-goerli.g.alchemy.com/v2/' + env.ALCHEMY_API_KEY;
-
   switch (name.split('.').pop()) {
     case 'eth': {
-      const etherLookup = new EtherLookup(ethProvider);
+      const etherLookup = new EtherLookup(ALCHEMY_ETH_MAINNET_URL + env.ALCHEMY_API_KEY);
       const result = await etherLookup.execute(name, env.names);
       return result;
     }
@@ -57,23 +48,34 @@ const handleLookup = async (name: string, env: Env) => {
       return result;
     }
     case 'lens': {
-      const lensLookup = new LensLookup(polygonProvider);
+      const lensLookup = new LensLookup(ALCHEMY_POLYGON_MAINNET_URL + env.ALCHEMY_API_KEY);
       const result = await lensLookup.execute(name, env.names);
       return result;
     }
     default: {
       let result;
       if (name[0] === '+') {
-        const e164Lookup = new E164Lookup(ethProvider);
+        const e164Lookup = new E164Lookup(ALCHEMY_ETH_MAINNET_URL + env.ALCHEMY_API_KEY);
         result = await e164Lookup.execute(name, env.names);
       } else {
-        const farcasterLookup = new FarcasterLookup(goerliProvider);
+        const farcasterLookup = new FarcasterLookup(ALCHEMY_ETH_GOERLI_URL + env.ALCHEMY_API_KEY);
         result = await farcasterLookup.execute(name, env.names);
       }
       return result;
     }
   }
 };
+
+const handleAddressLookup = async (address: string, env: Env) => {
+  if (!env.ALCHEMY_API_KEY) {
+    throw new Web3nsError('Provider API key was not given', 'InternalEnvError');
+  }
+
+  const etherLookup = new AddressLookup(env.ALCHEMY_API_KEY);
+
+  return await etherLookup.execute(address, env.names);
+}
+
 
 export default {
   async fetch(
@@ -90,7 +92,11 @@ export default {
       })
       .get('/api/v1/lookup/:name', async ({ params }) =>
         handleLookup(params.name, env)
-      );
+      )
+      .get('/api/v1/address/:address', async ({ params }) =>
+        handleAddressLookup(params.address, env)
+      )
+      .all('*', () => {throw new Web3nsError('URL Not found', 'URL Not found', 404 )} );
 
     return (
       router

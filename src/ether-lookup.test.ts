@@ -1,7 +1,7 @@
 import { beforeEach, vi, describe, test, expect } from 'vitest';
 import { providers } from 'ethers';
 import KVItem from './models/kv-item';
-import { LookupData } from './models/lookup';
+import { LookupData, AddressLookupData } from './models/lookup';
 import EtherLookup from './ether-lookup';
 import { Web3nsNotFoundError, Web3nsError } from './models/web3ns-errors';
 
@@ -35,13 +35,13 @@ const createLookupData = (
   return { name, phone, address };
 };
 
-const createKvItemFromLookupData = (lookupData: LookupData) => {
+const createKvItemFromLookupData = (lookupData: LookupData | AddressLookupData) => {
   return { address: lookupData.address, phone: lookupData.phone };
 };
 //#endregion
 
 //#region Mocks
-const mockNamespace = (getResponse: KVItem | null = createKvItem()) => {
+const mockNamespace = (getResponse: LookupData | AddressLookupData | null = createKvItem()) => {
   const namespace = {
     get: vi.fn().mockResolvedValue(getResponse),
     put: vi.fn().mockResolvedValue(undefined),
@@ -61,47 +61,6 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe('getName should', () => {
-  let namespace: KVNamespace;
-  let etherLookup: EtherLookup;
-
-  beforeEach(() => {
-    namespace = mockNamespace() as any;
-    etherLookup = new EtherLookup(defaultToken);
-  });
-
-  test('call get on namespace with given params', async () => {
-    const name = 'qwerty';
-    await etherLookup.getName(name, namespace);
-    await expect(namespace.get).toHaveBeenCalledWith(name, { type: 'json' });
-  });
-});
-
-describe('saveName should', () => {
-  let namespace: KVNamespace;
-  let etherLookup: EtherLookup;
-
-  beforeEach(() => {
-    namespace = mockNamespace() as any;
-    etherLookup = new EtherLookup(defaultToken);
-  });
-
-  test('call put on the given namespace with params', async () => {
-    const name = 'qwerty.avax';
-    const lookupData = createLookupData(name);
-    const minutes = Math.floor(Math.random() * 10);
-
-    const expectedKvItem = JSON.stringify(
-      createKvItemFromLookupData(lookupData)
-    );
-
-    await etherLookup.saveName(lookupData, namespace, minutes);
-
-    expect(namespace.put).toHaveBeenCalledWith(name, expectedKvItem, {
-      expirationTtl: minutes * 60,
-    });
-  });
-});
 
 describe('doLookup should', () => {
   let etherLookup: EtherLookup;
