@@ -1,8 +1,8 @@
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import avvy from '@avvy/client';
-import { LookupData } from './models/lookup';
-import AvaxLookup from './avax-lookup';
-import Web3nsNotFoundError from './models/web3ns-errors';
+import { LookupData } from '../../src/models/lookup';
+import AvaxLookup from '../../src/avax-lookup';
+import Web3nsNotFoundError from '../../src/models/web3ns-errors';
 
 vi.mock('@avvy/client');
 vi.mock('ethers');

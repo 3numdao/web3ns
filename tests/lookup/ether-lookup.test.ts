@@ -1,9 +1,8 @@
 import { beforeEach, vi, describe, test, expect } from 'vitest';
 import { providers } from 'ethers';
-import KVItem from './models/kv-item';
-import { LookupData, AddressLookupData } from './models/lookup';
-import EtherLookup from './ether-lookup';
-import { Web3nsNotFoundError, Web3nsError } from './models/web3ns-errors';
+import { Web3nsNotFoundError, Web3nsError } from '../../src/models/web3ns-errors';
+import { LookupData, AddressLookupData } from '../../src/models/lookup';
+import EtherLookup from '../../src/ether-lookup';
 
 vi.mock('ethers', async () => {
   return {

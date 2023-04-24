@@ -1,17 +1,13 @@
 import { createCors } from 'itty-cors';
 import { Router } from 'itty-router';
+import { Web3nsError } from './models/web3ns-errors';
+import { ALCHEMY_ETH_MAINNET_URL, ALCHEMY_POLYGON_MAINNET_URL, ALCHEMY_ETH_GOERLI_URL } from './web3ns-providers';
 import AvaxLookup from './avax-lookup';
 import E164Lookup from './e164-lookup';
 import EtherLookup from './ether-lookup';
 import FarcasterLookup from './farcaster-lookup';
 import LensLookup from './lens-lookup';
 import AddressLookup from './address-lookup';
-import { Web3nsError } from './models/web3ns-errors';
-import { providers } from 'ethers';
-
-const ALCHEMY_ETH_MAINNET_URL     = 'https://eth-mainnet.alchemyapi.io/v2/';
-const ALCHEMY_POLYGON_MAINNET_URL = 'https://polygon-mainnet.g.alchemy.com/v2/';
-const ALCHEMY_ETH_GOERLI_URL      = 'https://eth-goerli.g.alchemy.com/v2/';
 
 const supportedExtensions: string[] = ['.eth', '.avax', '.lens'];
 const { preflight, corsify } = createCors();
@@ -38,7 +34,7 @@ const handleLookup = async (name: string, env: Env) => {
 
   switch (name.split('.').pop()) {
     case 'eth': {
-      const etherLookup = new EtherLookup(ALCHEMY_ETH_MAINNET_URL + env.ALCHEMY_API_KEY);
+      const etherLookup = new EtherLookup(env.ALCHEMY_API_KEY);
       const result = await etherLookup.execute(name, env.names);
       return result;
     }
@@ -48,17 +44,17 @@ const handleLookup = async (name: string, env: Env) => {
       return result;
     }
     case 'lens': {
-      const lensLookup = new LensLookup(ALCHEMY_POLYGON_MAINNET_URL + env.ALCHEMY_API_KEY);
+      const lensLookup = new LensLookup(env.ALCHEMY_API_KEY);
       const result = await lensLookup.execute(name, env.names);
       return result;
     }
     default: {
       let result;
       if (name[0] === '+') {
-        const e164Lookup = new E164Lookup(ALCHEMY_ETH_MAINNET_URL + env.ALCHEMY_API_KEY);
+        const e164Lookup = new E164Lookup(env.ALCHEMY_API_KEY);
         result = await e164Lookup.execute(name, env.names);
       } else {
-        const farcasterLookup = new FarcasterLookup(ALCHEMY_ETH_GOERLI_URL + env.ALCHEMY_API_KEY);
+        const farcasterLookup = new FarcasterLookup(env.ALCHEMY_API_KEY);
         result = await farcasterLookup.execute(name, env.names);
       }
       return result;

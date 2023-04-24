@@ -1,18 +1,17 @@
 import { providers, ethers, BigNumber } from 'ethers';
 import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsNotFoundError } from './models/web3ns-errors';
-
-const LENS_LLP_CONTRACT_ADDRESS = '0xDb46d1Dc155634FbC732f92E853b10B288AD5a1d';
+import { ALCHEMY_POLYGON_MAINNET_URL, LENS_LLP_CONTRACT_ADDRESS } from './web3ns-providers';
 
 class LensLookup extends LookupBase {
-  constructor(private ALCHEMY_API_URL: string) {
+  constructor(private ALCHEMY_API_KEY: string) {
     super();
   }
 
   public async doLookup(name: string): Promise<LookupData> {
 
     const provider = new providers.StaticJsonRpcProvider({
-      url: this.ALCHEMY_API_URL,
+      url: ALCHEMY_POLYGON_MAINNET_URL + this.ALCHEMY_API_KEY,
       skipFetchSetup: true,
     });
 

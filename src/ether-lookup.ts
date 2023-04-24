@@ -1,17 +1,18 @@
 import { providers } from 'ethers';
+import {ALCHEMY_ETH_MAINNET_URL } from './web3ns-providers';
 import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
 
 const PHONE_TEXT = 'phone';
 
 class EtherLookup extends LookupBase {
-  constructor(private ALCHEMY_API_URL: string) {
+  constructor(private ALCHEMY_API_KEY: string) {
     super();
   }
 
   public async doLookup(name: string): Promise<LookupData> {
     
-    const resolver = await this.getResolver(this.ALCHEMY_API_URL, name);
+    const resolver = await this.getResolver(ALCHEMY_ETH_MAINNET_URL + this.ALCHEMY_API_KEY, name);
 
     if (!resolver) {
       throw new Web3nsNotFoundError('ENS name resolver was not found');

@@ -1,10 +1,7 @@
 import { ethers, providers } from 'ethers';
 import AVVY from '@avvy/client'
-import { LookupBase, LookupData,AddressLookupData } from './models/lookup';
-import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
-
-const FARCASTER_NAME_CONTRACT_ADDRESS = '0xe3be01d99baa8db9905b33a3ca391238234b79d1';
-const FARCASTER_ID_CONTRACT_ADDRESS = '0xDA107A1CAf36d198B12c16c7B6a1d1C795978C42';
+import { LookupBase, LookupData, AddressLookupData } from './models/lookup';
+import { ALCHEMY_ETH_MAINNET_URL, ALCHEMY_ETH_GOERLI_URL, AVAX_MAINNET_URL, FARCASTER_ID_CONTRACT_ADDRESS } from './web3ns-providers';
 
 class AddressLookup extends LookupBase {
   constructor(private ALCHEMY_API_KEY: string) {
@@ -19,11 +16,9 @@ class AddressLookup extends LookupBase {
   }
 
   private async getEth(address: string): Promise<string> {
-    const ethProvider =
-    'https://eth-mainnet.alchemyapi.io/v2/' + this.ALCHEMY_API_KEY;
 
     const provider = new providers.StaticJsonRpcProvider({
-      url: ethProvider,
+      url: ALCHEMY_ETH_MAINNET_URL + this.ALCHEMY_API_KEY,
       skipFetchSetup: true,
     });
 
@@ -32,7 +27,7 @@ class AddressLookup extends LookupBase {
 
   private async getFarcaster(address: string): Promise<{ name: string, fid: string }> {
     const provider = new providers.StaticJsonRpcProvider({
-      url: 'https://eth-goerli.g.alchemy.com/v2/' + this.ALCHEMY_API_KEY,
+      url: ALCHEMY_ETH_GOERLI_URL + this.ALCHEMY_API_KEY,
       skipFetchSetup: true,
     });
 
@@ -54,10 +49,9 @@ class AddressLookup extends LookupBase {
   }
   
   private async getAvvy(address: string): Promise<string> {
-    const PROVIDER_URL = 'https://api.avax.network/ext/bc/C/rpc';
 
     const provider = new providers.StaticJsonRpcProvider({
-      url: PROVIDER_URL,
+      url: AVAX_MAINNET_URL,
       skipFetchSetup: true,
     });
 

@@ -1,19 +1,16 @@
 import { providers, ethers, BigNumber } from 'ethers';
 import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
-
-const ALCHEMY_API_SERVER = 'https://eth-goerli.g.alchemy.com/v2/';
-
-const THREE_NUM_CONTRACT_ADDRESS = '0x385137A9f5a298cC620471b1CFf4F4c070afF4b9';
+import { ALCHEMY_ETH_MAINNET_URL, THREE_NUM_CONTRACT_ADDRESS } from './web3ns-providers';
 
 class E164Lookup extends LookupBase {
-  constructor(private ALCHEMY_API_URL: string) {
+  constructor(private ALCHEMY_API_KEY: string) {
     super();
   }
 
   public async doLookup(name: string): Promise<LookupData> {
     const provider = new providers.StaticJsonRpcProvider({
-      url: this.ALCHEMY_API_URL,
+      url: ALCHEMY_ETH_MAINNET_URL + this.ALCHEMY_API_KEY,
       skipFetchSetup: true,
     });
 
