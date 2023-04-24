@@ -1,52 +1,56 @@
-import KVItem from './kv-item';
-
 export interface LookupData {
   name: string;
   phone: string;
   address: string;
 }
 
+export interface AddressLookupData {
+  eth: {
+    name?: string;
+    altNames?: string[];
+  },
+  avax: {
+    name?: string;
+    altNames?: string[];
+  },
+  farcaster: {
+    fid?: string;
+  },
+  // lens: {
+  //   name?: string;
+  // },
+  // cb_id: {
+  //   name?: string;
+  // },
+  // shield: {
+  //   tokenId: string;
+  // },
+}
+
+const ExperationTTL = 5 * 60;
+
 export abstract class LookupBase {
-  public abstract doLookup(name: string): Promise<LookupData>;
+  public abstract doLookup(name: string): Promise<LookupData | AddressLookupData>;
 
   public async execute(
     name: string,
     namespace: KVNamespace
-  ): Promise<LookupData> {
-    const kvItem = await this.getName(name, namespace);
+  ): Promise<LookupData | AddressLookupData> {
+    
+    const kvItem = (await namespace.get(name, { type: 'json' })) as LookupData | AddressLookupData;
 
     if (kvItem) {
-      return { name, ...kvItem };
+      return { ...kvItem };
     }
 
     const lookupData = await this.doLookup(name);
-    await this.saveName(lookupData, namespace);
 
-    return lookupData;
-  }
-
-  public async saveName(
-    lookup: LookupData,
-    namespace: KVNamespace,
-    ttlMinutes = 5
-  ): Promise<void> {
-    return namespace.put(
-      lookup.name,
-      JSON.stringify({ address: lookup.address, phone: lookup.phone }),
-      { expirationTtl: ttlMinutes * 60 }
+    namespace.put( name,
+      JSON.stringify(lookupData),
+      { expirationTtl: ExperationTTL }
     );
-  }
 
-  // TODO: Use cacheTtl here?
-  public async getName(
-    name: string,
-    namespace: KVNamespace /*, cacheTtlMinutes = 5*/
-  ): Promise<KVItem | null> {
-    const kvItem = (await namespace.get(name, {
-      type: 'json',
-      /*cacheTtl: cacheTtlMinutes * 60,*/
-    })) as KVItem;
-
-    return kvItem;
+    console.log('lookupData: ', lookupData);
+    return lookupData;
   }
 }
