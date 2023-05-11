@@ -51,6 +51,19 @@ describe('Worker', () => {
     }
   });
 
+  it('should return address for boscolo.cb.id', async () => {
+    const resp = await worker.fetch('/api/v1/lookup/boscolo.cb.id');
+
+    if (resp) {
+       const response = await resp.json();
+      expect(response).toEqual({
+        name: 'boscolo.cb.id',
+        address: '0xa1FAa890DD55a71b329Df3f2B8Be00cB2f6459DB',
+        phone: '',
+      });
+    }
+  });
+
   it('should return 404 not found for foobarzyssaae3249.lens', async () => {
     const resp = await worker.fetch('/api/v1/lookup/foobarzyssaae3249.lens');
 

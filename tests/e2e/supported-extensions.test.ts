@@ -15,7 +15,7 @@ describe('supported-extension should', () => {
 
     if (resp) {
       const response = await resp.json();
-      expect(response).toEqual(['.eth', '.avax', '.lens']);
+      expect(response).toEqual(['.eth', '.avax', '.lens', 'cb.id']);
     }
   });
 });

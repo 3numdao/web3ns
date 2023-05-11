@@ -9,7 +9,7 @@ import FarcasterLookup from './farcaster-lookup';
 import LensLookup from './lens-lookup';
 import AddressLookup from './address-lookup';
 
-const supportedExtensions: string[] = ['.eth', '.avax', '.lens'];
+const supportedExtensions: string[] = ['.eth', '.avax', '.lens', 'cb.id'];
 const { preflight, corsify } = createCors();
 
 export interface Env {
@@ -32,7 +32,11 @@ const handleLookup = async (name: string, env: Env) => {
     throw new Web3nsError('Provider API key was not given', 'InternalEnvError');
   }
 
-  switch (name.split('.').pop()) {
+  let ext = name.split('.')
+  ext.shift();
+
+  switch (ext.join('.')) {
+    case 'cb.id':
     case 'eth': {
       const etherLookup = new EtherLookup(env.ALCHEMY_API_KEY);
       const result = await etherLookup.execute(name, env.names);
