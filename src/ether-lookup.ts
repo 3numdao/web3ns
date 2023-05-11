@@ -1,4 +1,5 @@
-import { providers } from 'ethers';
+import { createPublicClient, http } from 'viem'
+import { mainnet, goerli } from 'viem/chains'
 import {ALCHEMY_ETH_MAINNET_URL } from './web3ns-providers';
 import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
@@ -11,35 +12,18 @@ class EtherLookup extends LookupBase {
   }
 
   public async doLookup(name: string): Promise<LookupData> {
-    
-    const resolver = await this.getResolver(ALCHEMY_ETH_MAINNET_URL + this.ALCHEMY_API_KEY, name);
+        
+    const client = createPublicClient({
+      chain: mainnet,
+      transport: http(ALCHEMY_ETH_MAINNET_URL + this.ALCHEMY_API_KEY)
+    })
 
-    if (!resolver) {
-      throw new Web3nsNotFoundError('ENS name resolver was not found');
-    }
+    let [address, phone] = await Promise.all([client.getEnsAddress({name: name}), client.getEnsText({name: name, key: PHONE_TEXT})]);
 
-    const [address, phone] = await this.getResolverData(resolver, PHONE_TEXT);
+    address = address || '';
+    phone = phone || '';
 
     return { name, phone, address };
-  }
-
-  private async getResolver(
-    apiUrl: string,
-    name: string
-  ): Promise<providers.Resolver | null> {
-    const provider = new providers.StaticJsonRpcProvider({
-      url: apiUrl,
-      skipFetchSetup: true,
-    });
-
-    return provider.getResolver(name);
-  }
-
-  private async getResolverData(
-    resolver: providers.Resolver,
-    text: string
-  ): Promise<[string, string]> {
-    return Promise.all([resolver.getAddress(), resolver.getText(text)]);
   }
 }
 

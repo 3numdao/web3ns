@@ -2,6 +2,7 @@ import AVVY from '@avvy/client';
 import { providers } from 'ethers';
 import { LookupData, LookupBase } from './models/lookup';
 import Web3nsNotFoundError from './models/web3ns-errors';
+import { AVAX_MAINNET_URL } from './web3ns-providers';
 
 class AvaxLookup extends LookupBase {
   public async doLookup(name: string): Promise<LookupData> {
@@ -23,10 +24,9 @@ class AvaxLookup extends LookupBase {
   }
 
   private async getAvvyResponse(name: string) {
-    const PROVIDER_URL = 'https://api.avax.network/ext/bc/C/rpc';
 
     const provider = new providers.StaticJsonRpcProvider({
-      url: PROVIDER_URL,
+      url: AVAX_MAINNET_URL,
       skipFetchSetup: true,
     });
 

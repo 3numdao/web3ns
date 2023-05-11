@@ -50,7 +50,6 @@ export abstract class LookupBase {
       { expirationTtl: ExperationTTL }
     );
 
-    console.log('lookupData: ', lookupData);
     return lookupData;
   }
 }
