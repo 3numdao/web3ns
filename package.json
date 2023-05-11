@@ -20,6 +20,7 @@
     "@avvy/client": "^3.3.2",
     "ethers": "^5.7.2",
     "itty-cors": "^0.3.6",
-    "itty-router": "^3.0.11"
+    "itty-router": "^3.0.11",
+    "viem": "^0.3.21"
   }
 }

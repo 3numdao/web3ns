@@ -1,14 +1,13 @@
 import { beforeEach, vi, describe, test, expect } from 'vitest';
-import { providers } from 'ethers';
+import { createPublicClient, http } from 'viem';
 import { Web3nsNotFoundError, Web3nsError } from '../../src/models/web3ns-errors';
 import { LookupData, AddressLookupData } from '../../src/models/lookup';
 import EtherLookup from '../../src/ether-lookup';
 
-vi.mock('ethers', async () => {
+vi.mock('viem', async () => {
   return {
-    providers: {
-      StaticJsonRpcProvider: vi.fn(),
-    },
+      createPublicClient: vi.fn(),
+      http: vi.fn(),
   };
 });
 
@@ -50,8 +49,9 @@ const mockNamespace = (getResponse: LookupData | AddressLookupData | null = crea
 };
 
 function mockEthers(resolverFunction: any) {
-  (providers.StaticJsonRpcProvider as any).mockImplementation(() => ({
-    getResolver: resolverFunction,
+  (createPublicClient as any).mockImplementation(() => ({
+    getEnsAddress: vi.fn().mockResolvedValue(defaultAddress),
+    getEnsText: vi.fn().mockResolvedValue(defaultPhone),
   }));
 }
 //#endregion
@@ -71,8 +71,8 @@ describe('doLookup should', () => {
   test('return valid LookupData', async () => {
     mockEthers(
       vi.fn().mockResolvedValue({
-        getAddress: vi.fn().mockResolvedValue(defaultAddress),
-        getText: vi.fn().mockResolvedValue(defaultPhone),
+        getEnsAddress: vi.fn().mockResolvedValue(defaultAddress),
+        getEnsText: vi.fn().mockResolvedValue(defaultPhone),
       })
     );
     const name = 'qwerty.eth';

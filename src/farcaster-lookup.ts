@@ -1,4 +1,5 @@
-import { providers, ethers, BigNumber } from 'ethers';
+import { createPublicClient, http, parseAbi } from 'viem';
+import { goerli } from 'viem/chains';
 import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
 import { ALCHEMY_ETH_GOERLI_URL, FARCASTER_NAME_CONTRACT_ADDRESS } from './web3ns-providers';
@@ -19,28 +20,31 @@ class FarcasterLookup extends LookupBase {
 
   public async doLookup(name: string): Promise<LookupData> {
 
-    const provider = new providers.StaticJsonRpcProvider({
-      url: ALCHEMY_ETH_GOERLI_URL + this.ALCHEMY_API_KEY,
-      skipFetchSetup: true,
-    });
+    const client = createPublicClient({
+      chain: goerli,
+      transport: http(ALCHEMY_ETH_GOERLI_URL + this.ALCHEMY_API_KEY)
+    })
 
-    const contract = new ethers.Contract(FARCASTER_NAME_CONTRACT_ADDRESS, [
-      'function ownerOf(uint256 tokenId) public view returns (address)'
-    ], provider);
+    const abi = parseAbi([
+      'function ownerOf(uint256 tokenId) public view returns (address)',
+    ])
 
-    // Call ownerOf to get the address, handle the case where the name is not found and the call reverts
-    let addr;
+    let address = '';
     try {
-      addr = await contract.ownerOf('0x' + asciiToHex(name));
-    } catch (error) {
-      if (error.code === 'CALL_EXCEPTION') {
+      address = await client.readContract({
+        address: FARCASTER_NAME_CONTRACT_ADDRESS,
+        abi: abi,
+        functionName: 'ownerOf',
+        args: ['0x' + asciiToHex(name)],
+      });
+    } catch (error: any) {
+      if (error.message.includes('invalid token ID')) {
         throw new Web3nsNotFoundError('Farcaster name was not found');
       } else {
         throw new Web3nsError('Farcaster name lookup failed', 'InternalError');
       }
     }
 
-    const address = addr.toString();
     const phone = '';
     return { name, address, phone };
   }

@@ -99,7 +99,7 @@ describe('Worker', () => {
         expect(response).toEqual({
             eth: { name: 'boscolo.eth' },
             avax: { name: '' },
-            farcaster: { fid: '' },
+            farcaster: { name: '', fid: '' },
         });
     }
   });
@@ -112,7 +112,7 @@ describe('Worker', () => {
         expect(response).toEqual({
             eth: { name: '' },
             avax: { name: '' },
-            farcaster: { fid: '1898' },
+            farcaster: { name: '', fid: '1898' },
         });
     }
   });
