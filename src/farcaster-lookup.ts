@@ -2,7 +2,7 @@ import { createPublicClient, http, parseAbi } from 'viem';
 import { goerli } from 'viem/chains';
 import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
-import { ALCHEMY_ETH_GOERLI_URL, FARCASTER_NAME_CONTRACT_ADDRESS } from './web3ns-providers';
+import { web3nsConfig } from './web3ns-providers';
 
 function asciiToHex(str: string) {
   let hex = "";
@@ -14,15 +14,15 @@ function asciiToHex(str: string) {
 }
 
 class FarcasterLookup extends LookupBase {
-  constructor(private ALCHEMY_API_KEY: string) {
+  constructor(private cfg: web3nsConfig) {
     super();
   }
 
   public async doLookup(name: string): Promise<LookupData> {
 
     const client = createPublicClient({
-      chain: goerli,
-      transport: http(ALCHEMY_ETH_GOERLI_URL + this.ALCHEMY_API_KEY)
+      chain: this.cfg.farcasterChain,
+      transport: http(this.cfg.farcasterApi)
     })
 
     const abi = parseAbi([
@@ -32,7 +32,7 @@ class FarcasterLookup extends LookupBase {
     let address = '';
     try {
       address = await client.readContract({
-        address: FARCASTER_NAME_CONTRACT_ADDRESS,
+        address: this.cfg.farcasterNameContract,
         abi: abi,
         functionName: 'ownerOf',
         args: ['0x' + asciiToHex(name)],

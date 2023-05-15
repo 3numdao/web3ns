@@ -2,7 +2,10 @@ import { beforeEach, vi, describe, test, expect } from 'vitest';
 import { createPublicClient, http } from 'viem';
 import { Web3nsNotFoundError, Web3nsError } from '../../src/models/web3ns-errors';
 import { LookupData, AddressLookupData } from '../../src/models/lookup';
+import { web3nsConfig } from '../../src/web3ns-providers';
 import EtherLookup from '../../src/ether-lookup';
+
+const cfg = web3nsConfig('PRD','XXX'); // Cfg values not actually, just used to satisfy init
 
 vi.mock('viem', async () => {
   return {
@@ -13,7 +16,6 @@ vi.mock('viem', async () => {
 
 const defaultPhone = 'test-phone';
 const defaultAddress = 'test-address';
-const defaultToken = 'test-token';
 
 const expectedEtherNotFoundDescription = 'ENS name was not found';
 
@@ -65,7 +67,7 @@ describe('doLookup should', () => {
   let etherLookup: EtherLookup;
 
   beforeEach(() => {
-    etherLookup = new EtherLookup(defaultToken);
+    etherLookup = new EtherLookup(cfg);
   });
 
   test('return valid LookupData', async () => {

@@ -1,19 +1,18 @@
 import { createPublicClient, http, parseAbi } from 'viem';
-import { polygon } from 'viem/chains';
 import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsNotFoundError } from './models/web3ns-errors';
-import { ALCHEMY_POLYGON_MAINNET_URL, LENS_LLP_CONTRACT_ADDRESS } from './web3ns-providers';
+import { web3nsConfig } from './web3ns-providers';
 
 class LensLookup extends LookupBase {
-  constructor(private ALCHEMY_API_KEY: string) {
+  constructor(private cfg: web3nsConfig) {
     super();
   }
 
   public async doLookup(name: string): Promise<LookupData> {
 
     const client = createPublicClient({
-      chain: polygon,
-      transport: http(ALCHEMY_POLYGON_MAINNET_URL + this.ALCHEMY_API_KEY)
+      chain: this.cfg.polygonChain,
+      transport: http(this.cfg.polygonApi)
     })
 
     const abi = parseAbi([
@@ -22,7 +21,7 @@ class LensLookup extends LookupBase {
     ]);
 
     const profileId = await client.readContract({
-      address: LENS_LLP_CONTRACT_ADDRESS,
+      address: this.cfg.lensContract,
       abi: abi,
       functionName: 'getProfileIdByHandle',
       args: [name],
@@ -36,7 +35,7 @@ class LensLookup extends LookupBase {
     }
 
     const addr = await client.readContract({
-      address: LENS_LLP_CONTRACT_ADDRESS,
+      address: this.cfg.lensContract,
       abi: abi,
       functionName: 'ownerOf',
       args: [profileId],

@@ -1,11 +1,11 @@
 import { createPublicClient, http, parseAbi } from 'viem';
-import { mainnet } from 'viem/chains';
+
 import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
-import { ALCHEMY_ETH_MAINNET_URL, THREE_NUM_CONTRACT_ADDRESS } from './web3ns-providers';
+import { web3nsConfig } from './web3ns-providers';
 
 class E164Lookup extends LookupBase {
-  constructor(private ALCHEMY_API_KEY: string) {
+  constructor(private cfg: web3nsConfig) {
     super();
   }
 
@@ -13,8 +13,8 @@ class E164Lookup extends LookupBase {
     console.log('e164 doLookup name: ', name);
 
     const client = createPublicClient({
-      chain: mainnet,
-      transport: http(ALCHEMY_ETH_MAINNET_URL + this.ALCHEMY_API_KEY)
+      chain: this.cfg.ethChain,
+      transport: http(this.cfg.ethApi)
     });
 
     // Parse the name to get the number, trimming off the leading + sign
@@ -26,7 +26,7 @@ class E164Lookup extends LookupBase {
     ])
 
     const tokenId = await client.readContract({
-      address: THREE_NUM_CONTRACT_ADDRESS,
+      address: this.cfg.threeNumContract,
       abi: abi,
       functionName: 'e164uintToTokenId',
       args: [number],
@@ -36,7 +36,7 @@ class E164Lookup extends LookupBase {
     try {
   
       address = await client.readContract({
-        address: THREE_NUM_CONTRACT_ADDRESS,
+        address: this.cfg.threeNumContract,
         abi: abi,
         functionName: 'ownerOf',
         args: [tokenId],
