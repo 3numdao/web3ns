@@ -3,10 +3,10 @@ import { mainnet, goerli } from 'viem/chains';
 import { ethers } from 'ethers';
 import AVVY from '@avvy/client';
 import { LookupBase, LookupData, AddressLookupData } from './models/lookup';
-import { ALCHEMY_ETH_MAINNET_URL, ALCHEMY_ETH_GOERLI_URL, AVAX_MAINNET_URL, FARCASTER_ID_CONTRACT_ADDRESS } from './web3ns-providers';
+import { web3nsConfig } from './web3ns-providers';
 
 class AddressLookup extends LookupBase {
-  constructor(private ALCHEMY_API_KEY: string) {
+  constructor(private cfg: web3nsConfig) {
     super();
   }
 
@@ -20,8 +20,8 @@ class AddressLookup extends LookupBase {
   private async getEth(address: string): Promise<string> {
 
     const client = createPublicClient({
-      chain: mainnet,
-      transport: http(ALCHEMY_ETH_MAINNET_URL + this.ALCHEMY_API_KEY)
+      chain: this.cfg.ethChain,
+      transport: http(this.cfg.ethApi)
     })
  
     return await client.getEnsName({address: address}) || '';
@@ -29,8 +29,8 @@ class AddressLookup extends LookupBase {
 
   private async getFarcaster(address: string): Promise<{ name: string, fid: string }> {
     const client = createPublicClient({
-      chain: goerli,
-      transport: http(ALCHEMY_ETH_GOERLI_URL + this.ALCHEMY_API_KEY)
+      chain: this.cfg.farcasterChain,
+      transport: http(this.cfg.farcasterApi)
     })
 
     const abi = parseAbi([
@@ -38,7 +38,7 @@ class AddressLookup extends LookupBase {
     ]);
 
     const fid = await client.readContract({
-      address: FARCASTER_ID_CONTRACT_ADDRESS,
+      address: this.cfg.farcasterIdContract,
       abi: abi,
       functionName: 'idOf',
       args: [address],
@@ -51,7 +51,7 @@ class AddressLookup extends LookupBase {
   private async getAvvy(address: string): Promise<string> {
 
     const provider = new ethers.providers.StaticJsonRpcProvider({
-      url: AVAX_MAINNET_URL,
+      url: this.cfg.avaxApi,
       skipFetchSetup: true,
     });
 

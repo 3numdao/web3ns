@@ -3,6 +3,9 @@ import avvy from '@avvy/client';
 import { LookupData } from '../../src/models/lookup';
 import AvaxLookup from '../../src/avax-lookup';
 import Web3nsNotFoundError from '../../src/models/web3ns-errors';
+import { web3nsConfig } from '../../src/web3ns-providers';
+
+const cfg = web3nsConfig('PRD','XXX'); // Cfg values not actually, just used to satisfy init
 
 vi.mock('@avvy/client');
 vi.mock('ethers');
@@ -94,7 +97,7 @@ describe('doLookup should', () => {
   let avaxLookup: AvaxLookup;
 
   beforeEach(() => {
-    avaxLookup = new AvaxLookup();
+    avaxLookup = new AvaxLookup(cfg);
   });
 
   describe('assign address', () => {
@@ -187,7 +190,7 @@ describe('execute should', () => {
   const testAddress = 'test-address-not-default';
 
   beforeEach(() => {
-    avaxLookup = new AvaxLookup();
+    avaxLookup = new AvaxLookup(cfg);
     mockedNameFn = mockAvvy(mockAvvyResolverHappyPath);
   });
 

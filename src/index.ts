@@ -1,7 +1,7 @@
 import { createCors } from 'itty-cors';
 import { Router } from 'itty-router';
 import { Web3nsError } from './models/web3ns-errors';
-import { ALCHEMY_ETH_MAINNET_URL, ALCHEMY_POLYGON_MAINNET_URL, ALCHEMY_ETH_GOERLI_URL } from './web3ns-providers';
+import { web3nsConfig } from './web3ns-providers';
 import AvaxLookup from './avax-lookup';
 import E164Lookup from './e164-lookup';
 import EtherLookup from './ether-lookup';
@@ -13,18 +13,13 @@ const supportedExtensions: string[] = ['.eth', '.avax', '.lens', 'cb.id'];
 const { preflight, corsify } = createCors();
 
 export interface Env {
-  // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
+  // Binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
   names: KVNamespace;
   addresses: KVNamespace;
 
   ALCHEMY_API_KEY: string;
-  //
-  // Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-  // MY_DURABLE_OBJECT: DurableObjectNamespace;
-  //
-  // Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-  // MY_BUCKET: R2Bucket;
-  ETH_API_SERVER: string;
+  
+  ENVIRONMENT: string;
 }
 
 const handleLookup = async (name: string, env: Env) => {
@@ -32,33 +27,39 @@ const handleLookup = async (name: string, env: Env) => {
     throw new Web3nsError('Provider API key was not given', 'InternalEnvError');
   }
 
+  if (!env.ENVIRONMENT) {
+    throw new Web3nsError('ENVIRONMENT was not given', 'InternalEnvError');
+  }
+
+  const cfg = web3nsConfig(env.ENVIRONMENT, env.ALCHEMY_API_KEY);
+
   let ext = name.split('.')
   ext.shift();
 
   switch (ext.join('.')) {
     case 'cb.id':
     case 'eth': {
-      const etherLookup = new EtherLookup(env.ALCHEMY_API_KEY);
+      const etherLookup = new EtherLookup(cfg);
       const result = await etherLookup.execute(name, env.names);
       return result;
     }
     case 'avax': {
-      const avaxLookup = new AvaxLookup();
+      const avaxLookup = new AvaxLookup(cfg);
       const result = await avaxLookup.execute(name, env.names);
       return result;
     }
     case 'lens': {
-      const lensLookup = new LensLookup(env.ALCHEMY_API_KEY);
+      const lensLookup = new LensLookup(cfg);
       const result = await lensLookup.execute(name, env.names);
       return result;
     }
     default: {
       let result;
       if (name[0] === '+') {
-        const e164Lookup = new E164Lookup(env.ALCHEMY_API_KEY);
+        const e164Lookup = new E164Lookup(cfg);
         result = await e164Lookup.execute(name, env.names);
       } else {
-        const farcasterLookup = new FarcasterLookup(env.ALCHEMY_API_KEY);
+        const farcasterLookup = new FarcasterLookup(cfg);
         result = await farcasterLookup.execute(name, env.names);
       }
       return result;
@@ -71,7 +72,13 @@ const handleAddressLookup = async (address: string, env: Env) => {
     throw new Web3nsError('Provider API key was not given', 'InternalEnvError');
   }
 
-  const etherLookup = new AddressLookup(env.ALCHEMY_API_KEY);
+  if (!env.ENVIRONMENT) {
+    throw new Web3nsError('ENVIRONMENT was not given', 'InternalEnvError');
+  }
+
+  const cfg = web3nsConfig(env.ENVIRONMENT, env.ALCHEMY_API_KEY);
+
+  const etherLookup = new AddressLookup(cfg);
 
   return await etherLookup.execute(address, env.addresses);
 }
