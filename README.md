@@ -50,6 +50,25 @@ To deploy things to staging, run:
 npx wrangler -e stg publish
 ```
 
-This deploys the `web3ns-staging` worker which uses the namespaces:
+This deploys the `web3ns-staging` worker and can be reached at `https://web3ns-staging.enumdao.workers.dev`. It uses the namespaces:
 - web3ns-staging-stg-addresses
 - web3ns-staging-stg-names
+
+# Looking things up
+## Looking up names:
+```
+curl https://web3ns.3num.co/api/v1/lookup/boscolo.eth
+{"name":"boscolo.eth","phone":"","address":"0x6a40260B27B13E52033c211b840f04DC64059748"}
+```
+
+## Looking up numbers
+```
+curl https://web3ns.3num.co/api/v1/lookup/+18059024256               
+{"name":"+18059024256","address":"0x6697d7cd36eD1782dFdb721d3c3a1f4F901b957d","phone":""}
+```
+
+## Reverse lookups: address -> names
+```
+curl https://web3ns.3num.co/api/v1/address/0x6a40260B27B13E52033c211b840f04DC64059748
+{"eth":{"name":"boscolo.eth"},"avax":{"name":""},"farcaster":{"name":"","fid":""}}
+```
