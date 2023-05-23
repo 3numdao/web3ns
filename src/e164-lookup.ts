@@ -10,7 +10,6 @@ class E164Lookup extends LookupBase {
   }
 
   public async doLookup(name: string): Promise<LookupData> {
-    console.log('e164 doLookup name: ', name);
 
     const client = createPublicClient({
       chain: this.cfg.ethChain,
