@@ -1,4 +1,4 @@
-import { mainnet, polygon, avalanche, hardhat } from 'viem/chains';
+import { mainnet, polygon, avalanche, hardhat, goerli } from 'viem/chains';
 
 export interface web3nsConfig {
     ethChain: any;
@@ -24,8 +24,6 @@ const AVAX_MAINNET_URL            = 'https://api.avax.network/ext/bc/C/rpc'
 
 // Contracts
 
-const THREE_NUM_CONTRACT_ADDRESS = '0x385137A9f5a298cC620471b1CFf4F4c070afF4b9';
-
 const LENS_LLP_CONTRACT_ADDRESS  = '0xDb46d1Dc155634FbC732f92E853b10B288AD5a1d';
 
 const FARCASTER_NAME_CONTRACT_ADDRESS = '0xe3be01d99baa8db9905b33a3ca391238234b79d1';
@@ -35,7 +33,7 @@ export const web3nsConfig = (env: string, apiKey: string): web3nsConfig => {
     switch (env) {
         case 'stg':
             return {
-                ethChain: mainnet,
+                ethChain: goerli,
                 ethApi: ALCHEMY_ETH_GOERLI_URL + apiKey,
                 polygonChain: polygon,
                 polygonApi: ALCHEMY_POLYGON_MAINNET_URL + apiKey,
@@ -43,7 +41,7 @@ export const web3nsConfig = (env: string, apiKey: string): web3nsConfig => {
                 avaxApi: AVAX_MAINNET_URL, // Doesn't use apiKey
                 farcasterChain: hardhat,
                 farcasterApi: ALCHEMY_ETH_GOERLI_URL + apiKey, // Prod Farcaster is on Goerli now
-                threeNumContract: THREE_NUM_CONTRACT_ADDRESS,
+                threeNumContract: '0x6C48247D280382491A94983470D01f428F29C69b',
                 lensContract: LENS_LLP_CONTRACT_ADDRESS,
                 farcasterNameContract: FARCASTER_NAME_CONTRACT_ADDRESS,
                 farcasterIdContract: FARCASTER_ID_CONTRACT_ADDRESS        
@@ -60,7 +58,7 @@ export const web3nsConfig = (env: string, apiKey: string): web3nsConfig => {
         avaxApi: AVAX_MAINNET_URL, // Doesn't use apiKey
         farcasterChain: hardhat,
         farcasterApi: ALCHEMY_ETH_GOERLI_URL + apiKey, // Prod Farcaster is on Goerli now
-        threeNumContract: THREE_NUM_CONTRACT_ADDRESS,
+        threeNumContract: '0x385137A9f5a298cC620471b1CFf4F4c070afF4b9',
         lensContract: LENS_LLP_CONTRACT_ADDRESS,
         farcasterNameContract: FARCASTER_NAME_CONTRACT_ADDRESS,
         farcasterIdContract: FARCASTER_ID_CONTRACT_ADDRESS        

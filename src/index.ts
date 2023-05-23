@@ -33,11 +33,9 @@ const handleLookup = async (name: string, env: Env) => {
 
   const cfg = web3nsConfig(env.ENVIRONMENT, env.ALCHEMY_API_KEY);
 
-  let ext = name.split('.')
-  ext.shift();
+  let nameParts = name.split('.')
 
-  switch (ext.join('.')) {
-    case 'cb.id':
+  switch (nameParts.pop()) {
     case 'eth': {
       const etherLookup = new EtherLookup(cfg);
       const result = await etherLookup.execute(name, env.names);
@@ -52,6 +50,13 @@ const handleLookup = async (name: string, env: Env) => {
       const lensLookup = new LensLookup(cfg);
       const result = await lensLookup.execute(name, env.names);
       return result;
+    }
+    case 'id': {
+      if (nameParts.pop() === 'cb') {
+        return (new EtherLookup(cfg)).execute(name, env.names);
+      } else {
+        throw new Web3nsError('Invalid name', 'InvalidNameError');
+      }
     }
     default: {
       let result;
