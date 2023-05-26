@@ -117,6 +117,19 @@ describe('Worker', () => {
     }
   });
 
+  it('should return "scopecreep.eth" for address 0x5B212bE0b34554A819004f6222271F27d700fd4d', async () => {
+    const resp = await worker.fetch('/api/v1/address/0x5B212bE0b34554A819004f6222271F27d700fd4d');
+
+    if (resp) {
+        const response = await resp.json();
+        expect(response).toEqual({
+            eth: { name: '' },
+            avax: { name: 'scopecreep.avax' },
+            farcaster: { name: '', fid: '' },
+        });
+    }
+  });
+
   it('should return Farcaster name/d for address 0x3eFbe95EBdE6042147644Bc39CdfcF54B8E4f523', async () => {
     const resp = await worker.fetch('/api/v1/address/0x3eFbe95EBdE6042147644Bc39CdfcF54B8E4f523');
 

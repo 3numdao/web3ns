@@ -60,7 +60,8 @@ class AddressLookup extends LookupBase {
     try {
       const avvy = new AVVY(provider)
       const hash = await avvy.reverse(AVVY.RECORDS.EVM, address)
-      avax = await hash.lookup()
+      avax = (await hash.lookup()).name
+      
     } catch {}
 
     return avax;
