@@ -130,7 +130,7 @@ export class Server {
    * @returns An `itty-router.Router` object configured to serve as a CCIP read gateway.
    */
 
-  async handleRequest(sender: string, callData: string) {
+  async handleRequest_old(sender: string, callData: string) {
     if (!isAddress(sender) || !isBytesLike(callData)) {
       throw new Web3nsError('Invalid sender or callData', 'InvalidRequest', 400);
     }
@@ -149,7 +149,7 @@ export class Server {
     }
   }
 
-  async call(call: RPCCall): Promise<RPCResponse> {
+  async call_old(call: RPCCall): Promise<RPCResponse> {
     console.log('call.data: ', call.data)
     const calldata = hexlify(call.data);
     console.log('calldata: ', calldata)

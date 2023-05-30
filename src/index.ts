@@ -8,8 +8,7 @@ import EtherLookup from './ether-lookup';
 import FarcasterLookup from './farcaster-lookup';
 import LensLookup from './lens-lookup';
 import AddressLookup from './address-lookup';
-import { Server } from './ccip-server';
-import {resolveName } from './ccip-resolve';
+import { ccipResolveName } from './ccip-resolve';
 
 
 const supportedExtensions: string[] = ['.eth', '.avax', '.lens', 'cb.id'];
@@ -102,35 +101,9 @@ const handleCcipResolv = async (address: string, callData: string, env: Env ) =>
 
   const cfg = web3nsConfig(env.ENVIRONMENT, env.ALCHEMY_API_KEY);
 
-  const ccipServer = new Server(cfg);
+//  const ccipServer = new Server(cfg);
 
-  const abi = [
-    'function resolve(bytes name, bytes data) view returns (bytes response)',
-  ];
-
-  function hexStringToUint8Array(hexString: string): Uint8Array {
-    const hexWithoutPrefix = hexString.startsWith('0x') ? hexString.slice(2) : hexString;
-    const byteLength = hexWithoutPrefix.length / 2;
-    const uint8Array = new Uint8Array(byteLength);
-  
-    for (let i = 0; i < byteLength; i++) {
-      const hexByte = hexWithoutPrefix.substr(i * 2, 2);
-      uint8Array[i] = parseInt(hexByte, 16);
-    }
-  
-    return uint8Array;
-  }
-
-  ccipServer.add(abi, [{
-    type: 'resolve',
-    func: async ([name, callData], data) => {
-      console.log(`ccip-server resolve(): contractAddress(${data.to}) name: `, name);
-
-      return resolveName(cfg, data.to, hexStringToUint8Array(name), callData, data.data);
-    }
-  }]);
-
-  return await ccipServer.handleRequest(address, callData);
+  return await ccipResolveName(cfg, address, callData);
 }
 
 export default {
