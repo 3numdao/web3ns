@@ -1,6 +1,7 @@
 export interface Web3nsError {
+  message: string;
   error: string;
-  httpStatus: number;
+  httpStatus?: number;
 }
 
 export class Web3nsError extends Error {
@@ -25,4 +26,4 @@ export class Web3nsNotFoundError extends Web3nsError {
   }
 }
 
-export default Web3nsNotFoundError;
+//export default Web3nsNotFoundError;
