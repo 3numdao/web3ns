@@ -6,7 +6,9 @@ import {
   Address,
   createWalletClient,
   encodeAbiParameters,
-  decodeFunctionData
+  decodeFunctionData,
+  toBytes,
+  pad,
 } from 'viem';
 import { hardhat } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -14,16 +16,7 @@ import { ethers } from 'ethers';
 import { isAddress, isBytesLike } from 'ethers/lib/utils';
 import { Web3nsError } from './models/web3ns-errors';
 
-import type { BytesLike } from 'ethers';
 import { web3nsConfig } from './web3ns-providers';
-
-import {
-  Fragment,
-  FunctionFragment,
-  Interface,
-  JsonFragment,
-} from '@ethersproject/abi';
-
 
 const TTL_SECONDS: number = 300; // 5 minutes
 
@@ -84,91 +77,6 @@ function decodeDNSName(encoded: Uint8Array): string {
   return decoded;
 }
 
-
-export interface RPCResponse {
-  status: number;
-  body: any;
-}
-
-async function handleRequest(sender: string, callData: string) {
-
-  try {
-    const response = await call(sender, callData);
-    return response.body;
-    //   return new Response(JSON.stringify(response.body), {
-    //     status: response.status,
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //   });
-  } catch (e) {
-    throw new Web3nsError(
-      `Internal server error: ${(e as any).toString()}`,
-      'InternalError',
-      500
-    );
-  }
-}
-
-async function call(sender: string, callData: string): Promise<RPCResponse> {
-  console.log('call.data: ', call.data);
-  const calldata = hexlify(call.data);
-  console.log('calldata: ', calldata);
-
-
-  //console.log('ccip-server call() calldata: ', call.data);
-
-
-  console.log('ccip-server call(): args: ', args);
-  //console.log('ccip-server call(): call: ', call);
-
-  // Call the handler
-  const result = await handler.func(args, call);
-
-  console.log('ccip-server call(): result: ', result);
-
-  // Encode return data
-  return {
-    status: 200,
-    body: {
-      data: result,
-      // data: handler.type.outputs
-      //   ? hexlify(
-      //       ethers.utils.defaultAbiCoder.encode(handler.type.outputs, result)
-      //     )
-      //   : '0x',
-    },
-  };
-}
-
-function getFunctionSelector(calldata: string): string {
-  return calldata.slice(0, 10).toLowerCase();
-}
-
-function toInterface(
-  abi: string | readonly (string | Fragment | JsonFragment)[] | Interface
-) {
-  if (Interface.isInterface(abi)) {
-    return abi;
-  }
-  return new Interface(abi);
-}
-
-function hexStringToUint8Array(hexString: string): Uint8Array {
-  const hexWithoutPrefix = hexString.startsWith('0x')
-    ? hexString.slice(2)
-    : hexString;
-  const byteLength = hexWithoutPrefix.length / 2;
-  const uint8Array = new Uint8Array(byteLength);
-
-  for (let i = 0; i < byteLength; i++) {
-    const hexByte = hexWithoutPrefix.substr(i * 2, 2);
-    uint8Array[i] = parseInt(hexByte, 16);
-  }
-
-  return uint8Array;
-}
-
 export async function ccipResolveName(
   cfg: web3nsConfig,
   sender: `0x${string}`,
@@ -179,42 +87,33 @@ export async function ccipResolveName(
     throw new Web3nsError('Invalid sender or callData', 'InvalidRequest', 400);
   }
 
-  const selector = getFunctionSelector(callData);
-
   console.log('ccipResolveName sender: ', sender);
   console.log('ccipResolveName callData: ', callData);
-
-  const RESOLVE_NAME_SELECTOR = '0x9061b923';
-
-  if (getFunctionSelector(callData) !== RESOLVE_NAME_SELECTOR) {
-    throw new Web3nsError(
-      `No implementation for function with selector ${selector}`,
-      'FunctionNotFound',
-      400
-    );
-  }
 
   // Signature of contract function we are responding to
   const abi = parseAbi([
     'function resolve(bytes name, bytes data) view returns (bytes response)',
   ]);
 
-  // Decode function arguments
+  // Decode function arguments (this throws an error if the callData doesn't match abi)
   const { functionName, args } = decodeFunctionData({
       abi: abi,
       data: callData
   });
-  
+
   console.log('functionName: ', functionName);
   console.log('args: ', args);
 
-  // Lookup the name using e164-lookup
-  // Hash the returned senderAddress, expirey, callData, encodedAddress
-  // makeSignatureHash(uint64 expires, bytes calldata request, bytes calldata result) external view returns (bytes32)
+  // Verify that functionName is 'resolve'
+  if (functionName !== 'resolve') {
+    throw new Web3nsError(`Invalid function name ${functionName}`, 'InvalidRequest', 400);
+  }
 
-  const name = decodeDNSName(hexStringToUint8Array(args[0]));
+  //  const name = decodeDNSName(hexStringToUint8Array(args[0]));
+  const name = decodeDNSName(toBytes(args[0]));
   console.log('decoded DNS name: ', name);
 
+  
   const client = createPublicClient({
     chain: hardhat,
     transport: http('http://127.0.0.1:8545'),
@@ -225,12 +124,10 @@ export async function ccipResolveName(
   let addr: Address = zeroAddress;
 
   if (name === 'pete.cbdev.eth') {
-    addr = ethers.utils.getAddress(
-      '0x1111111111111111111111111111111111111111'
-    );
-    const addressBytes32 = ethers.utils.arrayify(addr);
-    addr = ethers.utils.hexZeroPad(addressBytes32, 32);
+    addr = '0x1111111111111111111111111111111111111111';
   }
+
+  addr = pad(addr, { size: 32 });
 
   console.log('returning addr: ', addr);
 
@@ -267,11 +164,6 @@ export async function ccipResolveName(
 
   const signature = ethers.utils.hexConcat([sig.r, sig.s, [sig.v]]);
 
-  //   function verify(bytes calldata request, bytes calldata response)
-  //   internal
-  //   view
-  //   returns (address, bytes memory)
-
   const res = encodeAbiParameters(
     [
       { name: 'result', type: 'bytes' },
@@ -284,3 +176,13 @@ export async function ccipResolveName(
   console.log('res: ', res);
   return { data: res}
 }
+
+
+  
+  // Lookup the name using e164-lookup
+  // Hash the returned senderAddress, expirey, callData, encodedAddress
+  // makeSignatureHash(uint64 expires, bytes calldata request, bytes calldata result) external view returns (bytes32)
+
+async function handleLookup(name: string, callData: `0x${string}`, env: Env) [
+
+]
