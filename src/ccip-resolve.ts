@@ -7,8 +7,12 @@ import {
   createWalletClient,
   encodeAbiParameters,
   decodeFunctionData,
+  encodeFunctionResult,
   toBytes,
+  stringToHex,
   pad,
+  stringToBytes,
+  toHex,
 } from 'viem';
 import { hardhat } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -113,23 +117,14 @@ export async function ccipResolveName(
   const name = decodeDNSName(toBytes(args[0]));
   console.log('decoded DNS name: ', name);
 
-  
+  const result = await handleLookup(name, args[1], cfg);
+
   const client = createPublicClient({
     chain: hardhat,
     transport: http('http://127.0.0.1:8545'),
   });
 
-  // Confirm the the name hashes to callDate name node
-  // Initialize addr with the Ethereum zero address
-  let addr: Address = zeroAddress;
-
-  if (name === 'pete.cbdev.eth') {
-    addr = '0x1111111111111111111111111111111111111111';
-  }
-
-  addr = pad(addr, { size: 32 });
-
-  console.log('returning addr: ', addr);
+  console.log('returning addr: ', result);
 
   // Sign the hash with signer (0x9858EfFD232B4033E47d90003D41EC34EcaEda94)
   const account = privateKeyToAccount(
@@ -148,7 +143,7 @@ export async function ccipResolveName(
   const expires: bigint = BigInt(Math.floor(Date.now() / 1000) + TTL_SECONDS);
 
   console.log('callData: ', callData);
-  const hash = await resultHash(cfg, expires, callData, addr);
+  const hash = await resultHash(cfg, expires, callData, result);
 
   // console.log(`Signing hash(${hash}) with signer: `, walletClient.account.address);
 
@@ -170,7 +165,7 @@ export async function ccipResolveName(
       { name: 'expires', type: 'uint64' },
       { name: 'sig', type: 'bytes' },
     ],
-    [addr, expires, signature]
+    [result, expires, signature]
   );
 
   console.log('res: ', res);
@@ -183,6 +178,70 @@ export async function ccipResolveName(
   // Hash the returned senderAddress, expirey, callData, encodedAddress
   // makeSignatureHash(uint64 expires, bytes calldata request, bytes calldata result) external view returns (bytes32)
 
-async function handleLookup(name: string, callData: `0x${string}`, env: Env) [
+async function handleLookup(name: string, callData: `0x${string}`, env: Env): Promise<`0x${string}`> {
+  // Confirm the the name hashes to callDate name node
+  // Initialize addr with the Ethereum zero address
 
-]
+  // Signature of contract function we are responding to
+  const abi = parseAbi([
+    'function addr(bytes32 node) view returns (bytes response)',
+    'function addr(bytes32 node, uint256 coinType) view returns (bytes response)',
+    'function text(bytes32 node, string key) view returns (string response)',
+    'function pubkey(bytes32 node) view returns (bytes32 x, bytes32 y)',
+    'function contenthash(bytes32 node) view returns (bytes response)',
+  ]);
+
+  // Decode function arguments (this throws an error if the callData doesn't match abi)
+  const { functionName, args } = decodeFunctionData({
+      abi: abi,
+      data: callData
+  });
+
+  console.log('sub lookup functionName: ', functionName);
+  console.log('sub lookup args: ', args);
+
+  // 
+  switch (functionName) {
+    case 'addr': {
+      let addr: Address = zeroAddress;
+
+      if (name === 'pete.cbdev.eth') {
+        addr = '0x1111111111111111111111111111111111111111';
+      }
+
+      return pad(addr, { size: 32 });
+    }
+
+    case 'text': {
+      console.log('text argv-1: ', args[1]);
+      let text: string = 'f';
+      if (name === 'pete.cbdev.eth' && args[1] === 'com.twitter') {
+        text = 'petejkim';
+        console.log('responding with text: ', text);
+      }
+
+      return encodeAbiParameters(
+          [{ name: 'response', type: 'string' }],
+          [text]
+      );
+    }
+
+    default: {
+      throw new Web3nsError(`Invalid sub function name ${functionName}`, 'InvalidRequest', 400);
+    }
+  }  
+}
+
+// 
+// ENS Text records
+//
+// avatar - a URL to an image used as an avatar or logo
+// description - A description of the name
+// display - a canonical display name for the ENS name; this MUST match the ENS name when its case is folded, and clients should ignore this value if it does not (e.g. "ricmoo.eth" could set this to "RicMoo.eth")
+// email - an e-mail address
+// keywords - A list of comma-separated keywords, ordered by most significant first; clients that interpresent this field may choose a threshold beyond which to ignore
+// mail - A physical mailing address
+// notice - A notice regarding this name
+// location - A generic location (e.g. "Toronto, Canada")
+// phone - A phone number as an E.164 string
+// url 
