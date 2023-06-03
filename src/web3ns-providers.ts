@@ -14,6 +14,7 @@ export interface web3nsConfig {
     farcasterNameContract: string;
     farcasterIdContract: string;
     e164ResolverContract: `0x${string}`;
+    threeNumEnsContract: `0x${string}`;
   }
 
 // Providers
@@ -49,7 +50,8 @@ export const web3nsConfig = (env: string, apiKey: string): web3nsConfig => {
                 lensContract: LENS_LLP_CONTRACT_ADDRESS,
                 farcasterNameContract: FARCASTER_NAME_CONTRACT_ADDRESS,
                 farcasterIdContract: FARCASTER_ID_CONTRACT_ADDRESS,
-                e164ResolverContract: E164_RESOLVER_CONTRACT_ADDRESS   
+                e164ResolverContract: E164_RESOLVER_CONTRACT_ADDRESS,
+                threeNumEnsContract: '0xC5273AbFb36550090095B1EDec019216AD21BE6c'
             };
     }
 
@@ -67,6 +69,7 @@ export const web3nsConfig = (env: string, apiKey: string): web3nsConfig => {
         lensContract: LENS_LLP_CONTRACT_ADDRESS,
         farcasterNameContract: FARCASTER_NAME_CONTRACT_ADDRESS,
         farcasterIdContract: FARCASTER_ID_CONTRACT_ADDRESS,
-        e164ResolverContract: E164_RESOLVER_CONTRACT_ADDRESS
+        e164ResolverContract: E164_RESOLVER_CONTRACT_ADDRESS,
+        threeNumEnsContract: '0xC5273AbFb36550090095B1EDec019216AD21BE6c'
     }
 }

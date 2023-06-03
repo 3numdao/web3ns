@@ -1,10 +1,8 @@
 import {
-  createPublicClient,
   http,
   parseAbi,
   zeroAddress,
   Address,
-  createWalletClient,
   encodeAbiParameters,
   decodeFunctionData,
   toBytes,
@@ -12,11 +10,10 @@ import {
   keccak256,
   encodePacked,
   namehash,
-
+  concat,
+  toHex
 } from 'viem';
 import { normalize } from 'viem/ens';
-import { hardhat } from 'viem/chains';
-import { privateKeyToAccount } from 'viem/accounts';
 import { ethers } from 'ethers';
 import { isAddress, isBytesLike } from 'ethers/lib/utils';
 import { Web3nsError } from './models/web3ns-errors';
@@ -86,8 +83,10 @@ export async function ccipResolveName(
     throw new Web3nsError('Invalid sender or callData', 'InvalidRequest', 400);
   }
 
-  console.log('ccipResolveName sender: ', sender);
-  console.log('ccipResolveName callData: ', callData);
+  // Ensure sender is the ccip contract
+  if (sender !== cfg.threeNumEnsContract) {
+    throw new Web3nsError(`Invalid sender contract ${sender}`, 'InvalidRequest', 400);
+  }
 
   // Signature of contract function we are responding to
   const abi = parseAbi([
@@ -100,9 +99,6 @@ export async function ccipResolveName(
       data: callData
   });
 
-  console.log('functionName: ', functionName);
-  console.log('args: ', args);
-
   // Verify that functionName is 'resolve'
   if (functionName !== 'resolve') {
     throw new Web3nsError(`Invalid function name ${functionName}`, 'InvalidRequest', 400);
@@ -110,49 +106,22 @@ export async function ccipResolveName(
 
   //  const name = decodeDNSName(hexStringToUint8Array(args[0]));
   const name = decodeDNSName(toBytes(args[0]));
-  console.log('decoded DNS name: ', name);
 
   const result = await handleLookup(name, args[1], cfg);
 
-  const client = createPublicClient({
-    chain: hardhat,
-    transport: http('http://127.0.0.1:8545'),
-  });
-
-  console.log('returning addr: ', result);
-
   // Sign the hash with signer (0x9858EfFD232B4033E47d90003D41EC34EcaEda94)
-  const account = privateKeyToAccount(
-    '0x1ab42cc412b618bdea3a599e3c9bae199ebf030895b039e9db1e30dafb12b727'
-  );
   const signer = new ethers.Wallet(
     '0x1ab42cc412b618bdea3a599e3c9bae199ebf030895b039e9db1e30dafb12b727'
   );
 
-  const walletClient = createWalletClient({
-    account,
-    chain: hardhat,
-    transport: http('http://127.0.0.1:8545'),
-  });
-
   const expires: bigint = BigInt(Math.floor(Date.now() / 1000) + TTL_SECONDS);
 
-  console.log('callData: ', callData);
-  const hash = await resultHash(expires, callData, result);
+  const hash = resultHash(expires, callData, result);
 
-  // console.log(`Signing hash(${hash}) with signer: `, walletClient.account.address);
-
-  // const signature = await walletClient.signMessage({
-  //     account,
-  //     message: hash,
-  //   })
-
-  console.log(`Signing hash(${hash}) with ether signer: `, signer.address);
-//  const signature = await signer.signMessage(ethers.utils.arrayify(hash));
-
+  // I can't find Viem support to replace this ethers call
   const sig = signer._signingKey().signDigest(hash);
 
-  const signature = ethers.utils.hexConcat([sig.r, sig.s, [sig.v]]);
+  const signature = concat([sig.r as `0x${string}`, sig.s as `0x${string}`, toHex(sig.v)]);
 
   const res = encodeAbiParameters(
     [
@@ -163,7 +132,6 @@ export async function ccipResolveName(
     [result, expires, signature]
   );
 
-  console.log('res: ', res);
   return { data: res}
 }
 
@@ -191,9 +159,6 @@ async function handleLookup(name: string, callData: `0x${string}`, env: Env): Pr
       abi: abi,
       data: callData
   });
-
-  console.log('sub lookup functionName: ', functionName);
-  console.log('sub lookup args: ', args);
 
   // Confirm that name is normalized and hashes to the name node
   if ( namehash(name) !== args[0]) {

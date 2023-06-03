@@ -125,17 +125,9 @@ export default {
       .get('/api/v1/address/:address', async ({ params }) =>
         handleAddressLookup(params.address, env)
       )
-      .get('/r/:sender/:callData', async ({ params }) => {
-        let foo;
-        console.log( `/r/${params.sender}/${params.callData}`);
-        try {
-          foo = await handleCcipResolv(params.sender, params.callData, env)
-        } catch (e) {
-          foo = { status: 500, body: { error: e.message } };
-        }
-        console.log('ccip-server handleRequest foo: ', foo);
-        return foo;
-      })
+      .get('/r/:sender/:callData', async ({ params }) => 
+        handleCcipResolv(params.sender, params.callData, env)
+      )
       .all('*', () => {throw new Web3nsError('API Not found', 'API Not found', 404 )} );
 
     return (
