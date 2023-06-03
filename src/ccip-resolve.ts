@@ -7,13 +7,14 @@ import {
   createWalletClient,
   encodeAbiParameters,
   decodeFunctionData,
-  encodeFunctionResult,
   toBytes,
-  stringToHex,
   pad,
-  stringToBytes,
-  toHex,
+  keccak256,
+  encodePacked,
+  namehash,
+
 } from 'viem';
+import { normalize } from 'viem/ens';
 import { hardhat } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 import { ethers } from 'ethers';
@@ -24,27 +25,21 @@ import { web3nsConfig } from './web3ns-providers';
 
 const TTL_SECONDS: number = 300; // 5 minutes
 
-async function resultHash(
-  cfg: web3nsConfig,
+function resultHash(
   expires: bigint,
   request: `0x${string}`,
   result: `0x${string}`
-): Promise<string> {
-  const abi = parseAbi([
-    'function makeSignatureHash(uint64 expires, bytes calldata request, bytes calldata result) external view returns (bytes32)',
-  ]);
-
-  const client = createPublicClient({
-    chain: cfg.ethChain,
-    transport: http('http://127.0.0.1:8545'),
-  });
-
-  return client.readContract({
-    address: '0xC5273AbFb36550090095B1EDec019216AD21BE6c',
-    abi: abi,
-    functionName: 'makeSignatureHash',
-    args: [expires, request, result],
-  });
+): string {  
+  return keccak256(encodePacked(
+    ['bytes', 'address', 'uint64', 'bytes32', 'bytes32'],
+    [
+      '0x1900',
+      '0xC5273AbFb36550090095B1EDec019216AD21BE6c',
+      expires,
+      keccak256(request || '0x'),
+      keccak256(result),
+    ]
+  ));
 }
 
 function decodeDNSName(encoded: Uint8Array): string {
@@ -143,7 +138,7 @@ export async function ccipResolveName(
   const expires: bigint = BigInt(Math.floor(Date.now() / 1000) + TTL_SECONDS);
 
   console.log('callData: ', callData);
-  const hash = await resultHash(cfg, expires, callData, result);
+  const hash = await resultHash(expires, callData, result);
 
   // console.log(`Signing hash(${hash}) with signer: `, walletClient.account.address);
 
@@ -200,13 +195,21 @@ async function handleLookup(name: string, callData: `0x${string}`, env: Env): Pr
   console.log('sub lookup functionName: ', functionName);
   console.log('sub lookup args: ', args);
 
-  // 
+  // Confirm that name is normalized and hashes to the name node
+  if ( namehash(name) !== args[0]) {
+    throw new Web3nsError(`Invalid name ${name}`, 'InvalidRequest', 400);
+  }
+  
+  if (normalize(name) !== name) {
+    throw new Web3nsError(`Invalid name ${name}`, 'InvalidRequest', 400);
+  }
+  
   switch (functionName) {
     case 'addr': {
       let addr: Address = zeroAddress;
 
       if (name === 'pete.cbdev.eth') {
-        addr = '0x1111111111111111111111111111111111111111';
+        addr = '0x2211111111111111111111111111111111111122';
       }
 
       return pad(addr, { size: 32 });
@@ -214,7 +217,7 @@ async function handleLookup(name: string, callData: `0x${string}`, env: Env): Pr
 
     case 'text': {
       console.log('text argv-1: ', args[1]);
-      let text: string = 'f';
+      let text: string = '';
       if (name === 'pete.cbdev.eth' && args[1] === 'com.twitter') {
         text = 'petejkim';
         console.log('responding with text: ', text);
