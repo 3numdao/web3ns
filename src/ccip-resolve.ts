@@ -19,7 +19,10 @@ import { isAddress, isBytesLike } from 'ethers/lib/utils';
 import { Web3nsError } from './models/web3ns-errors';
 
 import { web3nsConfig } from './web3ns-providers';
+import { queryName } from './ens-kv';
 
+export const ETH_COIN_TYPE = 60;
+export const EMPTY_CONTENT_HASH = '0x' as `0x${string}`;
 const TTL_SECONDS: number = 300; // 5 minutes
 
 function resultHash(
@@ -75,6 +78,20 @@ function decodeDNSName(encoded: Uint8Array): string {
 
 export async function ccipResolveName(
   cfg: web3nsConfig,
+  ensDb: KVNamespace,
+  sender: `0x${string}`,
+  callData: `0x${string}`
+) {
+  try {
+    return await ccipResolveName2(cfg, ensDb, sender, callData);
+  } catch (error) {
+    console.log('ccipResolveName2 failed: ', error);
+  }
+}
+
+export async function ccipResolveName2(
+  cfg: web3nsConfig,
+  ensDb: KVNamespace,
   sender: `0x${string}`,
   callData: `0x${string}`
 ) {
@@ -107,7 +124,7 @@ export async function ccipResolveName(
   //  const name = decodeDNSName(hexStringToUint8Array(args[0]));
   const name = decodeDNSName(toBytes(args[0]));
 
-  const result = await handleLookup(name, args[1], cfg);
+  const result = await handleLookup(cfg, name, args[1]);
 
   // Sign the hash with signer (0x9858EfFD232B4033E47d90003D41EC34EcaEda94)
   const signer = new ethers.Wallet(
@@ -141,7 +158,7 @@ export async function ccipResolveName(
   // Hash the returned senderAddress, expirey, callData, encodedAddress
   // makeSignatureHash(uint64 expires, bytes calldata request, bytes calldata result) external view returns (bytes32)
 
-async function handleLookup(name: string, callData: `0x${string}`, env: Env): Promise<`0x${string}`> {
+async function handleLookup(cfg: web3nsConfig, name: string, callData: `0x${string}`): Promise<`0x${string}`> {
   // Confirm the the name hashes to callDate name node
   // Initialize addr with the Ethereum zero address
 
@@ -168,30 +185,43 @@ async function handleLookup(name: string, callData: `0x${string}`, env: Env): Pr
   if (normalize(name) !== name) {
     throw new Web3nsError(`Invalid name ${name}`, 'InvalidRequest', 400);
   }
-  
+
+  const nameData = await queryName(cfg, name);
+
+  // Return 404 Not Found if name is not found
+  console.log('nameData: ', nameData);
+
   switch (functionName) {
     case 'addr': {
-      let addr: Address = zeroAddress;
-
-      if (name === 'pete.cbdev.eth') {
-        addr = '0x2211111111111111111111111111111111111122';
-      }
+      const addr: Address = nameData?.addresses?.[ETH_COIN_TYPE] || zeroAddress;
 
       return pad(addr, { size: 32 });
     }
 
     case 'text': {
       console.log('text argv-1: ', args[1]);
-      let text: string = '';
-      if (name === 'pete.cbdev.eth' && args[1] === 'com.twitter') {
-        text = 'petejkim';
-        console.log('responding with text: ', text);
-      }
+      let text: string = nameData?.text?.[args[1]] || '' 
+
+      console.log('responding with text: ', text);
 
       return encodeAbiParameters(
           [{ name: 'response', type: 'string' }],
           [text]
       );
+    }
+
+    case 'contenthash': {
+      const contenthash: `0x${string}` = nameData?.contenthash || EMPTY_CONTENT_HASH;
+
+      return encodeAbiParameters(
+        [{ name: 'response', type: 'bytes' }],
+        [contenthash]
+      );
+    }
+
+    case 'pubkey': {
+      console.warn('pubkey not implemented');
+      throw new Web3nsError(`pubkey not implemented`, 'InvalidRequest', 400);
     }
 
     default: {

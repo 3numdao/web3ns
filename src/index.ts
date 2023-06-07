@@ -14,16 +14,6 @@ import { ccipResolveName } from './ccip-resolve';
 const supportedExtensions: string[] = ['.eth', '.avax', '.lens', 'cb.id'];
 const { preflight, corsify } = createCors();
 
-export interface Env {
-  // Binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-  names: KVNamespace;
-  addresses: KVNamespace;
-
-  ALCHEMY_API_KEY: string;
-  
-  ENVIRONMENT: string;
-}
-
 const handleLookup = async (name: string, env: Env) => {
   if (!env.ALCHEMY_API_KEY) {
     throw new Web3nsError('Provider API key was not given', 'InternalEnvError');
@@ -101,9 +91,7 @@ const handleCcipResolv = async (address: string, callData: string, env: Env ) =>
 
   const cfg = web3nsConfig(env.ENVIRONMENT, env.ALCHEMY_API_KEY);
 
-//  const ccipServer = new Server(cfg);
-
-  return await ccipResolveName(cfg, address, callData);
+  return await ccipResolveName(cfg, env.ensDb, address, callData);
 }
 
 export default {
@@ -113,6 +101,22 @@ export default {
     ctx: ExecutionContext
   ): Promise<Response> {
     const router = Router();
+
+    // Temp init the ensDb with some dummy data
+    await env.ensDb.put( '12065551212.e164.eth',
+      JSON.stringify({
+        owner: '0x3311111111111111111111111111111111111122',
+        addresses: {
+          60: '0x3311111111111111111111111111111111111122',
+        },
+        text: {
+          'com.twitter': 'foobar',
+          '3NUM': '12065551212'
+        }
+      })
+    );
+
+    console.log('ensDb: ', await env.ensDb.get('12065551212.e164.eth', { type: 'json' }));
 
     router
       .all('*', (req) => preflight(req as any))

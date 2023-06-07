@@ -1,5 +1,17 @@
+import type { Address } from 'viem';
 import { mainnet, polygon, avalanche, hardhat, goerli } from 'viem/chains';
 
+export interface Env {
+    // Binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
+    names: KVNamespace;
+    addresses: KVNamespace;
+    ensDb: KVNamespace;
+  
+    ALCHEMY_API_KEY: string;
+    
+    ENVIRONMENT: string;
+  }
+  
 export interface web3nsConfig {
     ethChain: any;
     ethApi: string;
@@ -9,12 +21,12 @@ export interface web3nsConfig {
     avaxApi: string;
     farcasterChain: any;
     farcasterApi: string;
-    threeNumContract: string;
-    lensContract: string;
-    farcasterNameContract: string;
-    farcasterIdContract: string;
-    e164ResolverContract: `0x${string}`;
-    threeNumEnsContract: `0x${string}`;
+    threeNumContract: Address;
+    lensContract: Address;
+    farcasterNameContract: Address;
+    farcasterIdContract: Address;
+    e164ResolverContract: Address;
+    threeNumEnsContract: Address;
   }
 
 // Providers
