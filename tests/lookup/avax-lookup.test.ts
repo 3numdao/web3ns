@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import avvy from '@avvy/client';
 import { LookupData } from '../../src/models/lookup';
 import AvaxLookup from '../../src/avax-lookup';
-import Web3nsNotFoundError from '../../src/models/web3ns-errors';
+import { Web3nsNotFoundError } from '../../src/models/web3ns-errors';
 import { web3nsConfig } from '../../src/web3ns-providers';
 
 const cfg = web3nsConfig('PRD','XXX'); // Cfg values not actually, just used to satisfy init
