@@ -103,20 +103,6 @@ export default {
     const router = Router();
 
     // Temp init the ensDb with some dummy data
-    await env.ensDb.put( '12065551212.e164.eth',
-      JSON.stringify({
-        owner: '0x3311111111111111111111111111111111111122',
-        addresses: {
-          60: '0x3311111111111111111111111111111111111122',
-        },
-        text: {
-          'com.twitter': 'foobar',
-          '3NUM': '12065551212'
-        }
-      })
-    );
-
-    console.log('ensDb: ', await env.ensDb.get('12065551212.e164.eth', { type: 'json' }));
 
     router
       .all('*', (req) => preflight(req as any))
