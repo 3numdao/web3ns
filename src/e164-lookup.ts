@@ -1,4 +1,4 @@
-import { createPublicClient, http, parseAbi } from 'viem';
+import { createPublicClient, http, parseAbi, keccak256, encodePacked  } from 'viem';
 
 import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
@@ -21,16 +21,10 @@ class E164Lookup extends LookupBase {
 
     const abi = parseAbi([
       'function ownerOf(uint256 tokenId) public view returns (address)',
-      'function e164uintToTokenId(uint56 _number) public pure returns (uint256)'
     ])
 
-    const tokenId = await client.readContract({
-      address: this.cfg.threeNumContract,
-      abi: abi,
-      functionName: 'e164uintToTokenId',
-      args: [number],
-    });
-
+    const tokenId = BigInt(keccak256(encodePacked(['uint56'], [number])));
+    
     let address = '';
     try {
   
