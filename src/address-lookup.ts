@@ -1,5 +1,4 @@
 import { createPublicClient, http, parseAbi } from 'viem';
-import { mainnet, goerli } from 'viem/chains';
 import { ethers } from 'ethers';
 import AVVY from '@avvy/client';
 import { LookupBase, LookupData, AddressLookupData } from './models/lookup';
@@ -10,14 +9,14 @@ class AddressLookup extends LookupBase {
     super();
   }
 
-  public async doLookup(address: string): Promise<LookupData | AddressLookupData> {
+  public async doLookup(address: `0x${string}`): Promise<LookupData | AddressLookupData> {
 
     const [eth, avax, farcaster] = await Promise.all([this.getEth(address), this.getAvvy(address), this.getFarcaster(address)]);
 
     return { eth: {  name: eth }, avax: { name: avax }, farcaster: farcaster };
   }
 
-  private async getEth(address: string): Promise<string> {
+  private async getEth(address: `0x${string}`): Promise<string> {
 
     const client = createPublicClient({
       chain: this.cfg.ethChain,
@@ -27,7 +26,7 @@ class AddressLookup extends LookupBase {
     return await client.getEnsName({address: address}) || '';
   }
 
-  private async getFarcaster(address: string): Promise<{ name: string, fid: string }> {
+  private async getFarcaster(address: `0x${string}`): Promise<{ name: string, fid: string }> {
     const client = createPublicClient({
       chain: this.cfg.farcasterChain,
       transport: http(this.cfg.farcasterApi)

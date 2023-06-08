@@ -9,7 +9,7 @@ import FarcasterLookup from './farcaster-lookup';
 import LensLookup from './lens-lookup';
 import AddressLookup from './address-lookup';
 import { ccipResolveName } from './ccip-resolve';
-
+import type { Env } from './web3ns-providers';
 
 const supportedExtensions: string[] = ['.eth', '.avax', '.lens', 'cb.id'];
 const { preflight, corsify } = createCors();
@@ -80,7 +80,7 @@ const handleAddressLookup = async (address: string, env: Env) => {
   return await etherLookup.execute(address, env.addresses);
 }
 
-const handleCcipResolv = async (address: string, callData: string, env: Env ) => {
+const handleCcipResolv = async (address: `0x${string}`, callData: `0x${string}`, env: Env ) => {
   if (!env.ALCHEMY_API_KEY) {
     throw new Web3nsError('Provider API key was not given', 'InternalEnvError');
   }
@@ -116,7 +116,7 @@ export default {
         handleAddressLookup(params.address, env)
       )
       .get('/r/:sender/:callData', async ({ params }) => 
-        handleCcipResolv(params.sender, params.callData, env)
+        handleCcipResolv(params.sender as `0x${string}`, params.callData as `0x${string}`, env)
       )
       .all('*', () => {throw new Web3nsError('API Not found', 'API Not found', 404 )} );
 
@@ -124,7 +124,6 @@ export default {
       router
         .handle(request)
         .then((result) => corsify(Response.json(result)))
-        // TODO: This is wrong. Copy logic from ethercache
         .catch((error) =>
           corsify(
             Response.json(

@@ -188,9 +188,6 @@ async function handleLookup(cfg: web3nsConfig, name: string, callData: `0x${stri
 
   const nameData = await queryName(cfg, name);
 
-  // Return 404 Not Found if name is not found
-  console.log('nameData: ', nameData);
-
   switch (functionName) {
     case 'addr': {
       const addr: Address = nameData?.addresses?.[ETH_COIN_TYPE] || zeroAddress;
