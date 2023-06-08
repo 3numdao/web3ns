@@ -3,7 +3,7 @@ import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
 import { web3nsConfig } from './web3ns-providers';
 
-function nameToBigInt(str: string): BigInt {
+function nameToBigInt(str: string): bigint {
   let hex = "";
   for (let i = 0; i < str.length; i++) {
     let charCode = str.charCodeAt(i).toString(16);
