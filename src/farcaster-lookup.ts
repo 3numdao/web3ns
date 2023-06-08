@@ -1,16 +1,15 @@
-import { createPublicClient, http, parseAbi } from 'viem';
-import { goerli } from 'viem/chains';
+import { createPublicClient, http, parseAbi, toHex } from 'viem';
 import { LookupData, LookupBase } from './models/lookup';
 import { Web3nsError, Web3nsNotFoundError } from './models/web3ns-errors';
 import { web3nsConfig } from './web3ns-providers';
 
-function asciiToHex(str: string) {
+function nameToBigInt(str: string): BigInt {
   let hex = "";
   for (let i = 0; i < str.length; i++) {
     let charCode = str.charCodeAt(i).toString(16);
     hex += charCode.padStart(2, "0");
   }
-  return hex.padEnd(64, "0");
+  return BigInt('0x' + hex.padEnd(64, "0"));
 }
 
 class FarcasterLookup extends LookupBase {
@@ -35,7 +34,7 @@ class FarcasterLookup extends LookupBase {
         address: this.cfg.farcasterNameContract,
         abi: abi,
         functionName: 'ownerOf',
-        args: ['0x' + asciiToHex(name)],
+        args: [nameToBigInt(name)],
       });
     } catch (error: any) {
       if (error.message.includes('invalid token ID')) {
