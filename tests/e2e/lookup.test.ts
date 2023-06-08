@@ -123,7 +123,7 @@ describe('Worker', () => {
     if (resp) {
         const response = await resp.json();
         expect(response).toEqual({
-            eth: { name: '' },
+            eth: { name: 'scopecreep.boscolo.eth' },
             avax: { name: 'scopecreep.avax' },
             farcaster: { name: '', fid: '' },
         });

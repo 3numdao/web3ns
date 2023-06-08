@@ -1,5 +1,17 @@
+import type { Address } from 'viem';
 import { mainnet, polygon, avalanche, hardhat, goerli } from 'viem/chains';
 
+export interface Env {
+    // Binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
+    names: KVNamespace;
+    addresses: KVNamespace;
+    ensDb: KVNamespace;
+  
+    ALCHEMY_API_KEY: string;
+    
+    ENVIRONMENT: string;
+  }
+  
 export interface web3nsConfig {
     ethChain: any;
     ethApi: string;
@@ -9,10 +21,12 @@ export interface web3nsConfig {
     avaxApi: string;
     farcasterChain: any;
     farcasterApi: string;
-    threeNumContract: string;
-    lensContract: string;
-    farcasterNameContract: string;
-    farcasterIdContract: string;
+    threeNumContract: Address;
+    lensContract: Address;
+    farcasterNameContract: Address;
+    farcasterIdContract: Address;
+    e164ResolverContract: Address;
+    threeNumEnsContract: Address;
   }
 
 // Providers
@@ -29,6 +43,9 @@ const LENS_LLP_CONTRACT_ADDRESS  = '0xDb46d1Dc155634FbC732f92E853b10B288AD5a1d';
 const FARCASTER_NAME_CONTRACT_ADDRESS = '0xe3be01d99baa8db9905b33a3ca391238234b79d1';
 const FARCASTER_ID_CONTRACT_ADDRESS   = '0xDA107A1CAf36d198B12c16c7B6a1d1C795978C42';
 
+// E164 Resolver
+const E164_RESOLVER_CONTRACT_ADDRESS = '0xC5273AbFb36550090095B1EDec019216AD21BE6c';
+
 export const web3nsConfig = (env: string, apiKey: string): web3nsConfig => {
     switch (env) {
         case 'stg':
@@ -44,7 +61,9 @@ export const web3nsConfig = (env: string, apiKey: string): web3nsConfig => {
                 threeNumContract: '0x6C48247D280382491A94983470D01f428F29C69b',
                 lensContract: LENS_LLP_CONTRACT_ADDRESS,
                 farcasterNameContract: FARCASTER_NAME_CONTRACT_ADDRESS,
-                farcasterIdContract: FARCASTER_ID_CONTRACT_ADDRESS        
+                farcasterIdContract: FARCASTER_ID_CONTRACT_ADDRESS,
+                e164ResolverContract: E164_RESOLVER_CONTRACT_ADDRESS,
+                threeNumEnsContract: '0xC5273AbFb36550090095B1EDec019216AD21BE6c'
             };
     }
 
@@ -61,6 +80,8 @@ export const web3nsConfig = (env: string, apiKey: string): web3nsConfig => {
         threeNumContract: '0x385137A9f5a298cC620471b1CFf4F4c070afF4b9',
         lensContract: LENS_LLP_CONTRACT_ADDRESS,
         farcasterNameContract: FARCASTER_NAME_CONTRACT_ADDRESS,
-        farcasterIdContract: FARCASTER_ID_CONTRACT_ADDRESS        
-}
+        farcasterIdContract: FARCASTER_ID_CONTRACT_ADDRESS,
+        e164ResolverContract: E164_RESOLVER_CONTRACT_ADDRESS,
+        threeNumEnsContract: '0xC5273AbFb36550090095B1EDec019216AD21BE6c'
+    }
 }
