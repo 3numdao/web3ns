@@ -11,7 +11,7 @@ import AddressLookup from './address-lookup';
 import { ccipResolveName } from './ccip-resolve';
 import type { Env } from './web3ns-providers';
 
-const supportedExtensions: string[] = ['.eth', '.avax', '.lens', 'cb.id'];
+const supportedExtensions: string[] = ['.eth', '.avax', '.lens', '.cb.id'];
 const { preflight, corsify } = createCors();
 
 const handleLookup = async (name: string, env: Env) => {
