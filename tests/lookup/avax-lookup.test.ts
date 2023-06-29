@@ -1,5 +1,4 @@
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-import avvy from '@avvy/client';
 import { LookupData } from '../../src/models/lookup';
 import AvaxLookup from '../../src/avax-lookup';
 import { Web3nsNotFoundError } from '../../src/models/web3ns-errors';
@@ -7,11 +6,6 @@ import { web3nsConfig } from '../../src/web3ns-providers';
 
 const cfg = web3nsConfig('PRD','XXX'); // Cfg values not actually, just used to satisfy init
 
-vi.mock('@avvy/client');
-vi.mock('ethers');
-
-const XCHAIN = 1;
-const PCHAIN = 2;
 const EVM = 3;
 const PHONE = 9;
 
@@ -37,9 +31,24 @@ const createLookupData = (
   return { name, phone, address };
 };
 
-const createKvItemFromLookupData = (lookupData: LookupData) => {
-  return { name: lookupData.name, address: lookupData.address, phone: lookupData.phone };
-};
+vi.mock('viem', async () => {
+  return {
+      createPublicClient: vi.fn(() => ({
+        readContract: vi.fn((arg) => {
+          if (arg.args[1] === EVM) {
+            return defaultAddress;
+            //vi.fn().mockResolvedValue(defaultAddress)
+          } else if (arg.args[1] === PHONE) {
+            return defaultPhone;
+            //vi.fn().mockResolvedValue(defaultPhone)
+          }
+        })
+      })),
+      http: vi.fn(),
+      parseAbi: vi.fn(),
+  };
+});
+
 //#endregion
 
 //#region Mocks
@@ -51,42 +60,6 @@ const mockNamespace = (getResponse: LookupData | null = createKvItem()) => {
 
   return namespace;
 };
-
-/**
- *
- * @param resolverFunction The function to use for resolve: (type: string): string | null => {}, useful for mocking tests with error or expected returns.
- * @returns A reference to the function used for avvy.name, to validate it was/wasn't called.
- */
-function mockAvvy(resolverFunction: any) {
-  const mockedName = vi.fn().mockImplementation((name: string) => {
-    switch (name) {
-      case 'not-found.avax':
-        return Promise.resolve(null);
-      default:
-        return Promise.resolve({
-          name,
-          resolve: resolverFunction,
-        });
-    }
-  });
-
-  avvy.mockImplementation(() => ({
-    name: mockedName,
-  }));
-
-  return mockedName;
-}
-
-const mockAvvyResolverHappyPath = vi.fn().mockImplementation((type: number) => {
-  switch (type) {
-    case PHONE: // Phone
-      return Promise.resolve(defaultPhone);
-    case EVM: // Address
-      return Promise.resolve(defaultAddress);
-    default:
-      return Promise.resolve(null);
-  }
-});
 //#endregion
 
 beforeEach(() => {
@@ -102,64 +75,16 @@ describe('doLookup should', () => {
 
   describe('assign address', () => {
     test('when evm defined', async () => {
-      const address = 'test-evm-address';
-      mockAvvy(
-        vi.fn().mockImplementation((type: number) => {
-          switch (type) {
-            case EVM:
-              return Promise.resolve(address);
-            case PHONE:
-              return Promise.resolve(defaultPhone);
-          }
-        })
-      );
+      const address = 'test-address';
 
       const name = 'qwerty.avax';
       const lookupData = await avaxLookup.doLookup(name);
 
-      expect(lookupData.address).toBe(address);
-    });
-
-    test('when p_chain defined', () => {
-      const address = 'test-p_chain-address';
-      mockAvvy(
-        vi.fn().mockImplementation((type: number) => {
-          switch (type) {
-            case PHONE:
-              return Promise.resolve(defaultPhone);
-            case EVM:
-              return Promise.resolve(null);
-            case PCHAIN:
-              return Promise.resolve(address);
-          }
-        })
-      );
-    });
-
-    test('when x_chain defined', async () => {
-      const address = 'test-x_chain-address';
-      mockAvvy(
-        vi.fn().mockImplementation((type: number) => {
-          switch (type) {
-            case PHONE:
-              return Promise.resolve(defaultPhone);
-            case XCHAIN:
-              return Promise.resolve(address);
-            case EVM:
-            case PCHAIN:
-              return Promise.resolve(null);
-          }
-        })
-      );
-
-      const name = 'qwerty.avax';
-      const lookupData = await avaxLookup.doLookup(name);
       expect(lookupData.address).toBe(address);
     });
   });
 
   test('return valid LookupData', async () => {
-    mockAvvy(mockAvvyResolverHappyPath);
     const name = 'qwerty.avax';
     const expected = { name, address: defaultAddress, phone: defaultPhone };
 
@@ -169,7 +94,6 @@ describe('doLookup should', () => {
   });
 
   test('throw error when name not found', async () => {
-    mockAvvy(mockAvvyResolverHappyPath);
     const name = 'not-found.avax';
 
     return avaxLookup
@@ -191,16 +115,13 @@ describe('execute should', () => {
 
   beforeEach(() => {
     avaxLookup = new AvaxLookup(cfg);
-    mockedNameFn = mockAvvy(mockAvvyResolverHappyPath);
   });
 
   test('get lookup from getName', async () => {
     const name = 'qwerty.avax';
 
     const namespace = {
-      get: vi
-        .fn()
-        .mockImplementation(() => createKvItem(name, testPhone, testAddress)),
+      get: vi.fn().mockImplementation(() => createKvItem(name, testPhone, testAddress)),
       put: vi.fn(),
     } as any;
 
@@ -209,7 +130,6 @@ describe('execute should', () => {
     const lookupData = await avaxLookup.execute(name, namespace);
 
     expect(lookupData).toEqual(expectedData);
-    expect(mockedNameFn).not.toBeCalled();
   });
 
   test('get lookup from doLookup when name empty', async () => {
@@ -222,7 +142,6 @@ describe('execute should', () => {
 
     expect(lookupData).toEqual(expectedData);
 
-    expect(mockedNameFn).toHaveBeenCalledTimes(1);
     expect(namespace.get).toHaveBeenCalledWith(name, {
       type: 'json',
     });

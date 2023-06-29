@@ -50,7 +50,7 @@ const mockNamespace = (getResponse: LookupData | AddressLookupData | null = crea
   return namespace;
 };
 
-function mockEthers(resolverFunction: any) {
+function mockViem(resolverFunction: any) {
   (createPublicClient as any).mockImplementation(() => ({
     getEnsAddress: vi.fn().mockResolvedValue(defaultAddress),
     getEnsText: vi.fn().mockResolvedValue(defaultPhone),
@@ -71,7 +71,7 @@ describe('doLookup should', () => {
   });
 
   test('return valid LookupData', async () => {
-    mockEthers(
+    mockViem(
       vi.fn().mockResolvedValue({
         getEnsAddress: vi.fn().mockResolvedValue(defaultAddress),
         getEnsText: vi.fn().mockResolvedValue(defaultPhone),
@@ -86,7 +86,7 @@ describe('doLookup should', () => {
   });
 
   test('throw error when provider API key was not given', async () => {
-    mockEthers(vi.fn());
+    mockViem(vi.fn());
     etherLookup = new EtherLookup('');
     const name = 'qwerty.eth';
 
@@ -101,7 +101,7 @@ describe('doLookup should', () => {
   });
 
   test('throw error when name not found', async () => {
-    mockEthers(vi.fn().mockImplementation(() => null));
+    mockViem(vi.fn().mockImplementation(() => null));
     const name = 'not-found.eth';
 
     return etherLookup

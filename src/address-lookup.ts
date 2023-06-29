@@ -1,6 +1,5 @@
 import { createPublicClient, http, parseAbi } from 'viem';
-import { ethers } from 'ethers';
-import AVVY from '@avvy/client';
+import AvvyLookup from './avax-lookup';
 import { LookupBase, LookupData, AddressLookupData } from './models/lookup';
 import { web3nsConfig } from './web3ns-providers';
 
@@ -11,7 +10,7 @@ class AddressLookup extends LookupBase {
 
   public async doLookup(address: `0x${string}`): Promise<LookupData | AddressLookupData> {
 
-    const [eth, avax, farcaster] = await Promise.all([this.getEth(address), this.getAvvy(address), this.getFarcaster(address)]);
+    const [eth, avax, farcaster] = await Promise.all([this.getEth(address), AvvyLookup.getName(this.cfg, address), this.getFarcaster(address)]);
 
     return { eth: {  name: eth }, avax: { name: avax }, farcaster: farcaster };
   }
@@ -45,25 +44,6 @@ class AddressLookup extends LookupBase {
 
     const name = '';
     return { name: name, fid: fid.toString() };
-  }
-  
-  private async getAvvy(address: string): Promise<string> {
-
-    const provider = new ethers.providers.StaticJsonRpcProvider({
-      url: this.cfg.avaxApi,
-      skipFetchSetup: true,
-    });
-
-    // Lookup Avvy name
-    let avax = '';
-    try {
-      const avvy = new AVVY(provider)
-      const hash = await avvy.reverse(AVVY.RECORDS.EVM, address)
-      avax = (await hash.lookup()).name
-      
-    } catch {}
-
-    return avax;
   }
 }
 
