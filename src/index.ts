@@ -8,7 +8,6 @@ import EtherLookup from './ether-lookup';
 import FarcasterLookup from './farcaster-lookup';
 import LensLookup from './lens-lookup';
 import AddressLookup from './address-lookup';
-import { ccipResolveName } from './ccip-resolve';
 import type { Env } from './web3ns-providers';
 
 const supportedExtensions: string[] = ['.eth', '.avax', '.lens', '.cb.id'];
@@ -80,20 +79,6 @@ const handleAddressLookup = async (address: string, env: Env) => {
   return await etherLookup.execute(address, env.addresses);
 }
 
-const handleCcipResolv = async (address: `0x${string}`, callData: `0x${string}`, env: Env ) => {
-  if (!env.ALCHEMY_API_KEY) {
-    throw new Web3nsError('Provider API key was not given', 'InternalEnvError');
-  }
-
-  if (!env.ENVIRONMENT) {
-    throw new Web3nsError('ENVIRONMENT was not given', 'InternalEnvError');
-  }
-
-  const cfg = web3nsConfig(env.ENVIRONMENT, env.ALCHEMY_API_KEY);
-
-  return await ccipResolveName(cfg, env.ensDb, address, callData);
-}
-
 export default {
   async fetch(
     request: Request,
@@ -114,9 +99,6 @@ export default {
       )
       .get('/api/v1/address/:address', async ({ params }) =>
         handleAddressLookup(params.address, env)
-      )
-      .get('/r/:sender/:callData', async ({ params }) => 
-        handleCcipResolv(params.sender as `0x${string}`, params.callData as `0x${string}`, env)
       )
       .all('*', () => {throw new Web3nsError('API Not found', 'API Not found', 404 )} );
 
