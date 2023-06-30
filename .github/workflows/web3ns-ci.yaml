@@ -55,7 +55,7 @@ jobs:
       - uses: cloudflare/wrangler-action@2.0.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_DEPLOY_WORKER }}
-          command: wrangler deploy ${{env.WRANGLER_ARGS}}
+          command: deploy ${{env.WRANGLER_ARGS}}
 
       - uses: ./.github/workflows/scripts/release-helper
 
