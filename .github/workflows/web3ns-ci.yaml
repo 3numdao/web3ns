@@ -46,16 +46,16 @@ jobs:
       - run: yarn install --immutable
 
       - run: |
-          export WRANGLER_ARGS="--env staging"
+          echo WRANGLER_CMD="deploy --env staging" >> $GITHUB_ENV
           if [ "${{ needs.test.outputs.release_kind }}" == "production" ]; then
-            export WRANGLER_ARGS=""
+          echo WRANGLER_CMD="deploy" >> $GITHUB_ENV
           fi
  
       - uses: cloudflare/wrangler-action@2.0.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_DEPLOY_WORKER }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy ${{env.WRANGLER_ARGS}}
+          command: ${{ env.WRANGLER_ARGS }}
 
       - uses: ./.github/workflows/scripts/release-helper
 
