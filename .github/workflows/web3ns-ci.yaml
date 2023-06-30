@@ -62,7 +62,6 @@ jobs:
       - uses: ./.github/workflows/scripts/release-helper
 
     outputs:
-      deploy_link: ${{ secrets.DEPLOY_INFO_URL }}
       release_env: ${{ env.RELEASE_ENV }}
 
   release:
@@ -72,7 +71,7 @@ jobs:
     with:
       name: web3ns
       deploy_icon: https://dwglogo.com/wp-content/uploads/2020/05/Cloudflare_icon_transparent.png
-      deploy_link: ${{ needs.deploy.outputs.deploy_link }}
+      deploy_link: ${{ secrets.DEPLOY_INFO_URL }}
       failed: ${{ needs.test.result == 'failure' || needs.deploy.result == 'failure' }}
       release_env: ${{ needs.deploy.outputs.release_env }}
     secrets:
