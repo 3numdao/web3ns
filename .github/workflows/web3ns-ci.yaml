@@ -1,5 +1,5 @@
-# Deploy ens-ccip-worker service to staging when branch merged to `main`
-# Deploy ens-ccip-worker to prd when release is tagged with `release-prd-*`
+# Deploy web3ns-worker service to staging when branch merged to `main`
+# Deploy web3ns-worker to prd when release is tagged with `release-prd-*`
 name: Deploy web3ns-worker
 on:
   workflow_dispatch:
@@ -60,7 +60,7 @@ jobs:
       - uses: ./.github/workflows/scripts/release-helper
 
     outputs:
-      deploy_link: ${{ secrets.DEPLOY_INFO_URL }}
+      deploy_link: ${{ env.DEPLOY_INFO_URL }}
       release_env: ${{ env.RELEASE_ENV }}
 
   release:
@@ -68,7 +68,7 @@ jobs:
     if: success() || failure()
     uses: ./.github/workflows/release-manager.yml
     with:
-      name: ens-ccip-worker
+      name: web3ns
       deploy_icon: https://dwglogo.com/wp-content/uploads/2020/05/Cloudflare_icon_transparent.png
       deploy_link: ${{ needs.publish.outputs.deploy_link }}
       failed: ${{ needs.publish.result == 'failure' }}
