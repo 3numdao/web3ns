@@ -46,10 +46,9 @@ jobs:
       - run: yarn install --immutable
 
       - run: |
+          export WRANGLER_ARGS="--env staging"
           if [ "${{ needs.test.outputs.release_kind }}" == "production" ]; then
             export WRANGLER_ARGS=""
-          else
-            export WRANGLER_ARGS="--env staging"
           fi
  
       - uses: cloudflare/wrangler-action@2.0.0
