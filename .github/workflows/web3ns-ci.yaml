@@ -55,7 +55,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_DEPLOY_WORKER }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: ${{ env.WRANGLER_ARGS }}
+          command: ${{ env.WRANGLER_CMD }}
 
       - uses: ./.github/workflows/scripts/release-helper
 
