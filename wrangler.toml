@@ -14,6 +14,5 @@ workers_dev = true
 
 kv_namespaces = [
     { binding = "names",     id = "cde5aff1cf884e86921ba5dea091b099", preview_id = "f5574baa8d4c47afbea81b27b045bfd9" },
-    { binding = "addresses", id = "6d683d2c22b54d22a0da2b92ac1b2c02", preview_id = "0f1e086eab7142a1a35dd30979c0a4ca" },
-    { binding = "ensDb",     id = "99fb559b588c491aa91e81416839f78c", preview_id = "155b3702234c4897a62bc87f0e3efaf9" }
+    { binding = "addresses", id = "6d683d2c22b54d22a0da2b92ac1b2c02", preview_id = "0f1e086eab7142a1a35dd30979c0a4ca" }
 ]
