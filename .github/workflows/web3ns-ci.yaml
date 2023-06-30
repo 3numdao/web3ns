@@ -1,6 +1,6 @@
 # Deploy web3ns-worker service to staging when branch merged to `main`
 # Deploy web3ns-worker to prd when release is tagged with `release-prd-*`
-name: Deploy web3ns-worker
+name: web3ns
 on:
   workflow_dispatch:
   push:
@@ -55,6 +55,7 @@ jobs:
       - uses: cloudflare/wrangler-action@2.0.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_DEPLOY_WORKER }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy ${{env.WRANGLER_ARGS}}
 
       - uses: ./.github/workflows/scripts/release-helper
