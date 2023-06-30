@@ -1,0 +1,77 @@
+# Deploy ens-ccip-worker service to staging when branch merged to `main`
+# Deploy ens-ccip-worker to prd when release is tagged with `release-prd-*`
+name: Deploy web3ns-worker
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "src/**"
+      - "wrangler.toml"
+      - ".github/workflows/deploy-web3ns-worker.yaml"
+      - "!**.md"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: 'yarn'
+      - run: yarn
+      - run: yarn test
+      - uses: ./.github/workflows/scripts/release-helper
+
+    outputs:
+      release_targets: ${{ env.RELEASE_TARGETS }}
+      release_kind: ${{ env.RELEASE_KIND }}
+      release_env: ${{ env.RELEASE_ENV }}
+
+  deploy:
+    needs: test
+    if: >-
+      needs.test.outputs.release_kind == 'production'
+      || needs.test.outputs.release_kind == 'staging'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: yarn
+
+      - run: yarn install --immutable
+
+      - run: |
+          if [ "${{ needs.test.outputs.release_kind }}" == "production" ]; then
+            export WRANGLER_ARGS=""
+          else
+            export WRANGLER_ARGS="--env staging"
+          fi
+ 
+      - uses: cloudflare/wrangler-action@2.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_DEPLOY_WORKER }}
+          command: wrangler publish ${{env.WRANGLER_ARGS}}
+
+      - uses: ./.github/workflows/scripts/release-helper
+
+    outputs:
+      deploy_link: ${{ secrets.DEPLOY_INFO_URL }}
+      release_env: ${{ env.RELEASE_ENV }}
+
+  release:
+    needs: [test, deploy]
+    if: success() || failure()
+    uses: ./.github/workflows/release-manager.yml
+    with:
+      name: ens-ccip-worker
+      deploy_icon: https://dwglogo.com/wp-content/uploads/2020/05/Cloudflare_icon_transparent.png
+      deploy_link: ${{ needs.publish.outputs.deploy_link }}
+      failed: ${{ needs.publish.result == 'failure' }}
+      release_env: ${{ needs.publish.outputs.release_env }}
+    secrets:
+      slack_webhook: ${{ secrets.RELEASE_SLACK_WEBHOOK }}

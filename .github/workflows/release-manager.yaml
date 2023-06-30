@@ -1,0 +1,100 @@
+name: Release Manager
+on:
+  # invoked from other workflows
+  workflow_call:
+    inputs:
+      name:
+        type: string
+        required: true
+      failed:
+        type: boolean
+        required: true
+      release_env:
+        type: string
+        required: true
+      deploy_icon:
+        type: string
+      deploy_name:
+        type: string
+      deploy_link:
+        type: string
+      deploy_url:
+        type: string
+    secrets:
+      slack_webhook:
+        required: true
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo '${{ inputs.release_env }}' | base64 -d >> $GITHUB_ENV
+
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+
+      - run: |
+          echo SLACK_CHANNEL=devops-${{ env.RELEASE_KIND == 'production' && 'prd' || 'nonprd' }} >> $GITHUB_ENV
+          echo SLACK_ICON='${{ inputs.deploy_icon }}' >> $GITHUB_ENV
+          echo SLACK_USERNAME='${{ inputs.name }}' >> $GITHUB_ENV
+          echo DEPLOY_INFO='${{ inputs.deploy_name || inputs.name }} (${{ env.RELEASE_TITLE }})' >> $GITHUB_ENV
+          msg="$(git log -1 --format=%s ${{ env.RELEASE_SHA }})" >> $GITHUB_ENV
+          if [ -n '${{ inputs.deploy_url }}' ]; then
+            msg="${msg} (Deployed ${{ inputs.deploy_url }})"
+          fi
+          echo SLACK_MESSAGE="${msg}" >> $GITHUB_ENV
+
+      - if: '!inputs.failed'
+        run: |
+          echo SLACK_TITLE='Deployed ${{ env.DEPLOY_INFO }}' >> $GITHUB_ENV
+          echo SLACK_FOOTER='${{ inputs.deploy_link }}' >> $GITHUB_ENV
+          echo MSG_MINIMAL=ref,commit >> $GITHUB_ENV
+
+      - if: inputs.failed
+        run: |
+          echo SLACK_COLOR='#FF0000' >> $GITHUB_ENV
+          echo SLACK_TITLE='Failed to deploy ${{ env.DEPLOY_INFO }}' >> $GITHUB_ENV
+          echo SLACK_FOOTER='Deployment failed!' >> $GITHUB_ENV
+
+      - uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
+
+      - if: '!inputs.failed'
+        run: |
+          echo '### ${{ env.SLACK_TITLE }}! :ship:' >> $GITHUB_STEP_SUMMARY
+          if [ -n '${{ inputs.deploy_url }}' ]; then
+            echo '- URL: ${{ inputs.deploy_url }}' >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n '${{ inputs.deploy_link }}' ]; then
+            echo "- LOG: ${{ inputs.deploy_link }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  create-or-update:
+    if: '!inputs.failed'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo '${{ inputs.release_env }}' | base64 -d >> $GITHUB_ENV
+
+      - if: env.RELEASE_TARGETS != ''
+        name: Setup environment variables
+        run: |
+          echo '${{ inputs.release_env }}' | base64 -d >> $GITHUB_ENV
+          kind='${{ env.RELEASE_KIND }}';
+          echo "MESSAGE=Deployed [${{ inputs.deploy_name || inputs.name }}](${{ inputs.deploy_link }})" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v3 # need git checked out for gh to work
+        if: env.RELEASE_TARGETS != ''
+      - if: env.RELEASE_TARGETS != ''
+        name: Create or update ${{ env.RELEASE_TAG }}
+        run: >-
+          gh release create '${{ env.RELEASE_TAG }}' -t '${{ env.RELEASE_TITLE }}' -n '* ${{ env.MESSAGE }}'
+          ||
+          ( gh release view '${{ env.RELEASE_TAG }}' --json body -q .body ; echo '* ${{ env.MESSAGE }}' )
+          | gh release edit '${{ env.RELEASE_TAG }}' -F -
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - if: env.RELEASE_TARGETS != ''
+        run: echo '### Released ${{ env.RELEASE_TITLE }} (${{ env.RELEASE_TAG }}) :rocket:' >> $GITHUB_STEP_SUMMARY

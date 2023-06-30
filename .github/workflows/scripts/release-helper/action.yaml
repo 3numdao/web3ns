@@ -1,0 +1,69 @@
+name: Release Helper
+description: Evaluates the state of git to determine the kind of release to be run (if any)
+
+runs:
+  using: composite
+  steps:
+    # names are ignored in scripts (!!) so we "log" it with a comment on the 1st line
+    - run: |
+        # Evaluate state of ${{ github.ref_name }}
+        sha=${{ github.sha }}
+        if [ ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'release-prd-') }} = true ]; then
+          kind=production
+          abbrev=prd
+        elif [ ${{ github.ref_type == 'branch' && github.ref_name == 'main' }} = true -o ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'release-stg-') }} = true ]; then
+          kind=staging
+          abbrev=stg
+        elif [ ${{ github.event_name == 'pull_request' }} = true ]; then
+          if [ '${{ github.event.pull_request.draft }}' = false ]; then
+            kind=preview
+            abbrev=pre
+          else
+            kind=draft
+            abbrev=dft
+          fi
+          sha=${{ github.event.pull_request.head.sha }}
+          title=pull-${{ github.event.number }}
+          url=${{ github.event.pull_request._links.html.href }}
+        else
+          export GH_TOKEN='${{ github.token }}'
+          prs=$(gh pr list -R '${{ github.repository }}' -H '${{ github.ref_name }}' --json title,isDraft,url)
+          title=$(echo "$prs" | jq -r '.[0].title')
+          isDraft=$(echo "$prs" | jq -r '.[0].isDraft')
+          url=$(echo "$prs" | jq -r '.[0].url')
+          if [ "$title" = null ]; then
+            kind=other
+            abbrev=oth
+          else
+            if [ "$isDraft" = false ]; then
+              kind=preview
+              abbrev=pre
+            else
+              kind=draft
+              abbrev=dft
+            fi
+          fi
+        fi
+        if [ "$url" != null ]; then
+          echo "Associated pull request (${kind}): [${title}](${url})" >> $GITHUB_STEP_SUMMARY
+        fi
+        if [ ${{ github.ref_type == 'tag' }} = true ]; then
+          tag='${{ github.ref_name }}'
+          if [ ${{ startsWith(github.ref_name, 'release-') }} = true ]; then
+            # Retrieve the annotated tag (see https://github.com/actions/checkout/issues/290)
+            git fetch origin '+${{ github.ref }}:${{ github.ref }}'
+            git tag -l -n1 "${{ github.ref_name }}" | sed 's/^[^ ]* *//'
+            echo "RELEASE_TARGETS=$(git tag -l -n "${{ github.ref_name }}" | sed 's/^[^ ]* *//')" >> $GITHUB_ENV
+          fi
+        else
+          tag="release-${abbrev}-${GITHUB_SHA:0:7}"
+        fi
+        echo "RELEASE_SHA=${sha}" >> $GITHUB_ENV
+        echo "RELEASE_KIND=${kind}" >> $GITHUB_ENV
+        echo "RELEASE_ABBREV=${abbrev}" >> $GITHUB_ENV
+        echo "RELEASE_TAG=${tag}" >> $GITHUB_ENV
+        echo "RELEASE_TITLE="${kind^}" release $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
+      shell: bash
+
+    - run: echo "RELEASE_ENV=$(env | grep ^RELEASE_ | base64 -w0)" >> $GITHUB_ENV
+      shell: bash
