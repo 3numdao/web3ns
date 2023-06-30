@@ -61,7 +61,7 @@ jobs:
       - uses: ./.github/workflows/scripts/release-helper
 
     outputs:
-      deploy_link: ${{ env.DEPLOY_INFO_URL }}
+      deploy_link: ${{ secrets.DEPLOY_INFO_URL }}
       release_env: ${{ env.RELEASE_ENV }}
 
   release:
