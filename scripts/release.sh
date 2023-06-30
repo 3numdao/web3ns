@@ -24,29 +24,22 @@ fi
 
 tagname="release-${KIND}-$(git rev-parse --short @)"
 
-for app in "$@"; do
-  cat <<EOF
-----------------------------------------
-  ${app}
+prev_release=$(git tag -l -n1 --sort='-taggerdate:iso8601' | xargs)
 
-EOF
+if [[ -z "${prev_release}" ]]; then
+  echo "Failed to locate previous release tag!" >&2
+  continue
+fi
 
-  prev_release=$(git tag -l -n1 --sort='-taggerdate:iso8601' | awk '/'"${app}"'/ {print $1; exit}')
-  if [[ -z "${prev_release}" ]]; then
-    echo "Failed to locate previous release tag for ${app}!" >&2
-    continue
-  fi
+echo "  Changes since ${prev_release}:"
+echo
+git log --oneline ${prev_release}..HEAD
+echo
 
-  echo "  Changes since ${prev_release}:"
-  echo
-  git log --oneline ${prev_release}..HEAD -- "${app}/"
-  echo
-
-  echo "  Files affected since ${prev_release}:"
-  echo
-  (cd "${app}" && git diff --name-only ${prev_release}..HEAD . | cat)
-  echo
-done
+echo "  Files affected since ${prev_release}:"
+echo
+(git diff --name-only ${prev_release}..HEAD . | cat)
+echo
 
 echo
 echo '--------------------------------------------------------------------------------'
