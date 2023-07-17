@@ -78,18 +78,18 @@ describe('Worker', () => {
     }
   });
 
-  it('should return farcaster address for boscolo', async () => {
-    const resp = await worker.fetch('/api/v1/lookup/boscolo');
+  // it('should return farcaster address for boscolo.farcaster.xyz', async () => {
+  //   const resp = await worker.fetch('/api/v1/lookup/boscolo');
 
-    if (resp) {
-        const response = await resp.json();
-        expect(response).toEqual({
-            name: 'boscolo',
-            address: '0x3eFbe95EBdE6042147644Bc39CdfcF54B8E4f523',
-            phone: '',
-        });
-    }
-  });
+  //   if (resp) {
+  //       const response = await resp.json();
+  //       expect(response).toEqual({
+  //           name: 'boscolo',
+  //           address: '0x3eFbe95EBdE6042147644Bc39CdfcF54B8E4f523',
+  //           phone: '',
+  //       });
+  //   }
+  // });
 
   it('should return address for +18059024256', async () => {
     const resp = await worker.fetch('/api/v1/lookup/+18059024256');

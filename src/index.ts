@@ -10,7 +10,7 @@ import LensLookup from './lens-lookup';
 import AddressLookup from './address-lookup';
 import type { Env } from './web3ns-providers';
 
-const supportedExtensions: string[] = ['.eth', '.avax', '.lens', '.cb.id'];
+const supportedExtensions: string[] = ['.eth', '.avax', '.lens', '.cb.id', '.farcaster.xyz'];
 const { preflight, corsify } = createCors();
 
 const handleLookup = async (name: string, env: Env) => {
@@ -50,15 +50,12 @@ const handleLookup = async (name: string, env: Env) => {
       }
     }
     default: {
-      let result;
       if (name[0] === '+') {
         const e164Lookup = new E164Lookup(cfg);
-        result = await e164Lookup.execute(name, env.names);
+        return await e164Lookup.execute(name, env.names);
       } else {
-        const farcasterLookup = new FarcasterLookup(cfg);
-        result = await farcasterLookup.execute(name, env.names);
+        throw new Web3nsError('Invalid name', 'InvalidNameError');
       }
-      return result;
     }
   }
 };
