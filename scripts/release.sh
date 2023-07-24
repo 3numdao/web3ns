@@ -24,7 +24,9 @@ fi
 
 tagname="release-${KIND}-$(git rev-parse --short @)"
 
-prev_release=$(git tag -l -n1 --sort='-taggerdate:iso8601' | xargs)
+app="web3ns"
+
+prev_release=$(git tag -l -n1 --sort='-taggerdate:iso8601' | awk '/'"${app}"'/ {print $1; exit}')
 
 if [[ -z "${prev_release}" ]]; then
   echo "Failed to locate previous release tag!" >&2
@@ -56,5 +58,5 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo
 
-git tag -a "${tagname}" -m "$*"
+git tag -a "${tagname}" -m "${app}"
 git push --atomic origin "${tagname}"
