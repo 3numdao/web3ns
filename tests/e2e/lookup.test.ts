@@ -69,11 +69,11 @@ describe('Worker', () => {
   });
 
   // it('should return farcaster address for boscolo.farcaster.xyz', async () => {
-  //   const resp = await worker.fetch('/api/v1/lookup/boscolo');
+  //   const resp = await worker.fetch('/api/v1/lookup/boscolo.farcaster.xyz');
 
   //   const response = await resp.json();
   //   expect(response).toEqual({
-  //       name: 'boscolo',
+  //       name: 'boscolo.farcaster.xyz',
   //       address: '0x3eFbe95EBdE6042147644Bc39CdfcF54B8E4f523',
   //       phone: '',
   //   });

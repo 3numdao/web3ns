@@ -49,6 +49,13 @@ const handleLookup = async (name: string, env: Env) => {
         throw new Web3nsError('Invalid name', 'InvalidNameError');
       }
     }
+    case 'xyz': {
+      if (nameParts.pop() === 'farcaster') {
+        return (new EtherLookup(cfg)).execute(name, env.names);
+      } else {
+        throw new Web3nsError('Invalid name', 'InvalidNameError');
+      }
+    }
     default: {
       if (name[0] === '+') {
         const e164Lookup = new E164Lookup(cfg);
