@@ -9,7 +9,7 @@ import LensLookup from './lens-lookup';
 import AddressLookup from './address-lookup';
 import type { Env } from './web3ns-providers';
 
-const supportedExtensions: string[] = ['.eth', '.avax', '.lens', '.cb.id', '.farcaster.xyz'];
+const supportedExtensions: string[] = ['.eth', '.avax', '.lens', '.cb.id', '.fcast.id'];
 const { preflight, corsify } = createCors();
 
 const handleLookup = async (name: string, env: Env) => {
