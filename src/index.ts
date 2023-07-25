@@ -5,7 +5,6 @@ import { web3nsConfig } from './web3ns-providers';
 import AvaxLookup from './avax-lookup';
 import E164Lookup from './e164-lookup';
 import EtherLookup from './ether-lookup';
-import FarcasterLookup from './farcaster-lookup';
 import LensLookup from './lens-lookup';
 import AddressLookup from './address-lookup';
 import type { Env } from './web3ns-providers';
@@ -43,14 +42,10 @@ const handleLookup = async (name: string, env: Env) => {
       return result;
     }
     case 'id': {
-      if (nameParts.pop() === 'cb') {
+      const subdomain = nameParts.pop();
+      if (subdomain === 'cb') {
         return (new EtherLookup(cfg)).execute(name, env.names);
-      } else {
-        throw new Web3nsError('Invalid name', 'InvalidNameError');
-      }
-    }
-    case 'xyz': {
-      if (nameParts.pop() === 'farcaster') {
+      } else if (subdomain === 'fcast') {
         return (new EtherLookup(cfg)).execute(name, env.names);
       } else {
         throw new Web3nsError('Invalid name', 'InvalidNameError');
